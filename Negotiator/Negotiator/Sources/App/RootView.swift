@@ -10,6 +10,7 @@ struct RootView: View {
             case .loading:      LoadingView()
             case .onboarding:   OnboardingView()
             case .home:         HomeView()
+            case .cutscene:     CutsceneView()
             case .conversation: ConversationView()
             case .debrief:      DebriefView()
             }

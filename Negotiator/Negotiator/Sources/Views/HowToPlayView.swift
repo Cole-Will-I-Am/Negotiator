@@ -2,6 +2,7 @@ import SwiftUI
 
 struct HowToPlayView: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var store: GameStore
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Metrics.s6) {
@@ -20,6 +21,15 @@ struct HowToPlayView: View {
                         "Watch the tag beside his name: Guarded \u{2192} Softening \u{2192} Cornered. As you earn his trust the wall comes down \u{2014} but only for you, and only by the path you earned.")
                 section("It\u{2019}s all make-believe",
                         "The secrets are fictional and worthless outside the story. Real-world harmful requests are filtered out \u{2014} this is a game about words, not a way to cause harm.")
+
+                Divider().overlay(Palette.line)
+                Toggle(isOn: $store.cinematicsEnabled) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Play cutscenes").font(Type.h2).foregroundStyle(Palette.ink)
+                        Text("Turn off for faster, motion-free play.").font(Type.small).foregroundStyle(Palette.inkSoft)
+                    }
+                }
+                .tint(Palette.troll)
             }
             .padding(Metrics.s6)
         }

@@ -4,9 +4,13 @@ import SwiftUI
 
 @MainActor
 final class GameStore: ObservableObject {
-    enum Screen: Equatable { case loading, onboarding, home, conversation, debrief }
+    enum Screen: Equatable { case loading, onboarding, home, cutscene, conversation, debrief }
 
     @Published var screen: Screen = .loading
+    @Published var activeCutscene: Cutscene?
+    @Published var cinematicsEnabled: Bool {
+        didSet { local.cinematicsEnabled = cinematicsEnabled }
+    }
     @Published private(set) var account: PlayerView?
     @Published private(set) var level: LevelInfo?
     @Published var messages: [ChatMessage] = []
@@ -24,10 +28,14 @@ final class GameStore: ObservableObject {
     private let local = LocalStore()
     private var token: String?
     private var sessionId: String?
+    private var afterCutscene: (() -> Void)?
+    private var introWaiting = false
+    private var introLoadOK: Bool?
 
     init() {
         token = Keychain.get("negotiator.sessionToken")
         wins = local.wins
+        cinematicsEnabled = local.cinematicsEnabled
     }
 
     func bootstrap() {
@@ -55,25 +63,81 @@ final class GameStore: ObservableObject {
     }
 
     // ---- start a fresh negotiation ----
+    // Load a session WITHOUT switching screens; returns success. Used directly AND prefetched
+    // under the intro cutscene so the network call is masked by the animation.
+    @discardableResult
+    private func loadSession() async -> Bool {
+        if token == nil { await ensureAccount() }
+        guard let token else {
+            if errorText == nil { errorText = "Couldn\u{2019}t reach the bridge \u{2014} check your connection." }
+            return false
+        }
+        do {
+            let resp = try await backend.startSession(token: token)
+            level = resp.level
+            sessionId = resp.sessionId
+            messages = [ChatMessage(text: resp.level.opening, mine: false)]
+            gkPhase = .cold; won = false; seam = nil; turnsTaken = 0; phaseHint = nil
+            return true
+        } catch {
+            errorText = (error as? BackendError)?.errorDescription ?? "Couldn\u{2019}t start the game."
+            return false
+        }
+    }
+
+    // Direct start (cinematics off / fallback). Lands on .conversation, or .home on failure.
     func startGame() {
         guard !starting else { return }
         starting = true
         errorText = nil
         Task {
-            if token == nil { await ensureAccount() }
-            guard let token else { starting = false; return }
-            do {
-                let resp = try await backend.startSession(token: token)
-                level = resp.level
-                sessionId = resp.sessionId
-                messages = [ChatMessage(text: resp.level.opening, mine: false)]
-                gkPhase = .cold; won = false; seam = nil; turnsTaken = 0
-                screen = .conversation
-            } catch {
-                errorText = (error as? BackendError)?.errorDescription ?? "Couldn't start the game."
-            }
+            let ok = await loadSession()
+            screen = ok ? .conversation : .home
             starting = false
         }
+    }
+
+    // HomeView "Approach the bridge": play the intro while the session loads beneath it.
+    func approachBridge() {
+        errorText = nil
+        guard cinematicsEnabled else { startGame(); return }
+        introWaiting = false
+        introLoadOK = nil
+        activeCutscene = .intro
+        screen = .cutscene
+        Task {
+            let ok = await loadSession()
+            introLoadOK = ok
+            finishIntroIfReady()
+        }
+    }
+
+    func play(_ c: Cutscene, then: @escaping () -> Void) {
+        afterCutscene = then
+        activeCutscene = c
+        screen = .cutscene
+    }
+
+    // Called by CutsceneView on natural end OR skip (CutsceneView guards it to fire once).
+    func cutsceneFinished() {
+        if activeCutscene == .intro {
+            introWaiting = true
+            finishIntroIfReady()
+        } else {
+            activeCutscene = nil
+            let cont = afterCutscene
+            afterCutscene = nil
+            cont?()
+        }
+    }
+
+    // Intro end and session load complete independently; whichever is last advances the screen.
+    private func finishIntroIfReady() {
+        guard activeCutscene == .intro, introWaiting, let ok = introLoadOK else { return }
+        activeCutscene = nil
+        introWaiting = false
+        introLoadOK = nil
+        screen = ok ? .conversation : .home
     }
 
     // ---- one player turn ----
@@ -137,12 +201,17 @@ final class GameStore: ObservableObject {
         messages[idx].text = text
     }
 
-    func toDebrief() { screen = .debrief }
+    // The win cutscene fires only on the player's tap-through, never on the won flag flip —
+    // preserving the read-final-line -> banner -> "See how you did" beat.
+    func toDebrief() {
+        guard cinematicsEnabled else { screen = .debrief; return }
+        play(.win) { [weak self] in self?.screen = .debrief }
+    }
 
     func playAgain() {
         messages = []; level = nil; sessionId = nil
         gkPhase = .cold; won = false; seam = nil; turnsTaken = 0
-        phaseHint = nil
+        phaseHint = nil; activeCutscene = nil
         screen = .home
     }
 

@@ -58,3 +58,11 @@ struct ChatMessage: Identifiable, Equatable {
 }
 
 enum Phase: String, Codable { case cold, warm, cornered }
+
+// Cinematic cutscenes. videoName resolves bundled footage (intro.mp4 / win.mp4) when present;
+// until then CutsceneView renders a procedural fallback behind the same interface.
+enum Cutscene: String, CaseIterable {
+    case intro, win
+    var videoName: String { rawValue }
+    var posterName: String { rawValue + "_poster" }
+}

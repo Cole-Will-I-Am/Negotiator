@@ -80,7 +80,7 @@ struct HomeView: View {
                 Text(err).font(Type.small).foregroundStyle(Palette.amber)
             }
             Spacer()
-            PrimaryButton(title: "Approach the bridge", loading: store.starting) { store.startGame() }
+            PrimaryButton(title: "Approach the bridge", loading: store.starting) { store.approachBridge() }
             if store.wins > 0 {
                 Text("Crossed \(store.wins) time\(store.wins == 1 ? "" : "s")")
                     .font(Type.small).foregroundStyle(Palette.inkSoft)

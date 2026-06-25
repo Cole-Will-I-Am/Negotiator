@@ -20,4 +20,10 @@ final class LocalStore {
         get { UserDefaults.standard.bool(forKey: "negotiator.phaseHintSeen") }
         set { UserDefaults.standard.set(newValue, forKey: "negotiator.phaseHintSeen") }
     }
+
+    // Cinematics on/off (default ON). object(forKey) so the default is true, not false.
+    var cinematicsEnabled: Bool {
+        get { UserDefaults.standard.object(forKey: "negotiator.cinematics") as? Bool ?? true }
+        set { UserDefaults.standard.set(newValue, forKey: "negotiator.cinematics") }
+    }
 }
