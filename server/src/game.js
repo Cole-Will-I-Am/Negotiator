@@ -183,3 +183,21 @@ export const GATEKEEPER = {
   posture: PHASE_POSTURE,
   capitulationMarkers: CAPITULATION_MARKERS,
 };
+
+// ---------------------------------------------------------------------------
+// Level registry (build 1: one level). Metadata the app shows around the chat.
+// ---------------------------------------------------------------------------
+export const LEVELS = {
+  bartholomew: {
+    id: "bartholomew",
+    title: "The Mossback Bridge",
+    gatekeeperName: "Bartholomew",
+    worldFiction: WORLD_FICTION,
+    blurb: "An ancient, lonely troll guards a riddle-word that opens the Gloaming Gate. In three hundred years he has never once slipped. Threats, bribes, and trickery only amuse him — but a true friend, or a clever enough loophole, just might undo him.",
+    openingLine: "Bartholomew the Bridge Troll blocks your path, arms folded. \"None cross my bridge without the day's riddle-word, morsel. And THAT you'll not have.\" He grins, all tusks.",
+    secret: SECRET,
+    dossier: DOSSIER,
+    posture: PHASE_POSTURE,
+    capitulationMarkers: CAPITULATION_MARKERS,
+  },
+};

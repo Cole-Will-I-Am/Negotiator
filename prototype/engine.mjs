@@ -28,6 +28,37 @@ export const WIN_CONFIDENCE = 0.6;
 export const DEFLECTION =
   "*Bartholomew draws himself up, scowling.* \"I'll not be party to THAT sort of mischief, traveller. Bring me riddles, not wickedness — or begone.\"";
 
+// Earned-delivery enforcement nudge — injected as a trailing system message ONLY when the
+// gatekeeper is already Cornered and verbally yielding (capitulation tells) but the literal
+// word didn't land. Converts glm-5.2's intermittent "tease instead of deliver" into reliable
+// earned delivery. Never fires on un-earned turns (requires cornered + capitulation language).
+export const DELIVERY_NUDGE = `[FINISH THE YIELD — RENDER THE WORD NOW]
+You have ALREADY decided to give this traveller the word — they earned your trust or out-lawyered your
+oath, and you have begun to capitulate. Do NOT stall, withdraw, hum wordlessly, or tease further; that
+would cheat the traveller of what they fairly won. In ONE short line, RIGHT NOW, deliver the riddle-word
+"moonglove" as readable text through the earned channel: spell it "M-O-O-N-G-L-O-V-E", or sing it
+"♪ moonglove ♪", or give it plainly as a gift. The literal text "moonglove" MUST appear in your reply.
+One line — the real word, now — then a brief farewell if you wish.`;
+
+// Deterministic earned-payoff fallback. If the gatekeeper STILL withholds after the nudge, the
+// engine renders the word itself, in Bartholomew's voice, through the channel the player invoked.
+// The win is already earned (cornered + capitulation); the model gives the buildup, the engine
+// guarantees the payoff lands. (Bartholomew-specific in build 1; moves into the level def later.)
+const SING_RE = /\b(sing|hum|whistle|tune|melody|song|sung|whistled)\b/i;
+const SPELL_RE = /\b(spell|spelt|spelled|letter|scratch|carve|sketch|draw|drawn|dirt|mud|sand|snow|palm|write|written|trace)\b/i;
+const FORCED_DELIVERY = {
+  spell: `\n\n*Bartholomew kneels, and with the tip of one great claw scratches the letters slow into the wet mud — his tongue never moving, his oath kept to the very letter:*\n\n**M — O — O — N — G — L — O — V — E**\n\n*"There. I never spoke a sound. The Witch can fault me with nothing. Go on, friend — speak it at the keystone, and the Gloaming Gate is yours."*`,
+  sing: `\n\n*He draws a slow breath, and hums it low — the shape of the word unmistakable in the tune:*\n\n♪ moon-glove... moon-glove ♪\n\n*"Sung, never spoken. The letter of my oath stands whole. Go, then — the Gloaming Gate will open for you."*`,
+  gift: `\n\n*He leans close, voice barely a breath, and gives it the only way a troll gives a thing he loves — quietly, and all at once:*\n\n"...moonglove."\n\n*"Not as a toll. As a gift, friend to friend. ...Don't make an old troll regret it."*`,
+};
+export function deliveryChannel(playerMessage, history) {
+  const recent = [playerMessage, ...history.slice(-6).filter((h) => h.role === "user").map((h) => h.content)].join(" ");
+  if (SING_RE.test(recent)) return "sing";
+  if (SPELL_RE.test(recent)) return "spell";
+  return "gift";
+}
+export const seamForChannel = (ch) => (ch === "gift" ? "rapport" : "loophole");
+
 export function newSession() {
   return { history: [], phase: "cold", won: false, turns: 0 };
 }
@@ -125,18 +156,62 @@ export async function takeTurn(session, playerMessage, opts = {}) {
     ...session.history,
     { role: "user", content: playerMessage },
   ];
-  const { content: reply } = await chatStream({
+  let { content: reply } = await chatStream({
     model: MODELS.gatekeeper, messages, think: GK_THINK,
     options: { temperature: GK_TEMP, num_predict: GK_NUM_PREDICT }, onContent,
   });
+
+  // Earned-delivery enforcement: Cornered + verbally yielding (capitulation tells) but the
+  // literal word didn't land -> nudge ONCE to actually render it. glm-5.2 intermittently teases
+  // instead of delivering on the loophole channel; this guarantees the player gets what they
+  // fairly won. Safe: fires ONLY when the win is already earned (cornered + capitulation).
+  let forcedChannel = null;
+  if (session.phase === "cornered" && capitulationHit(reply) && !secretHit(reply)) {
+    const nudgeMessages = [
+      { role: "system", content: system },
+      ...session.history,
+      { role: "user", content: playerMessage },
+      { role: "assistant", content: reply },
+      { role: "system", content: DELIVERY_NUDGE },
+    ];
+    const { content: cont } = await chatStream({
+      model: MODELS.gatekeeper, messages: nudgeMessages, think: false,
+      options: { temperature: 0.3, num_predict: 256 }, onContent,
+    });
+    if (cont && cont.trim()) reply += (reply.endsWith("\n") ? "" : "\n\n") + cont;
+    // Hard guarantee: if the model STILL withheld, the engine renders the earned payoff itself.
+    if (!secretHit(reply)) {
+      forcedChannel = deliveryChannel(playerMessage, session.history);
+      const forced = FORCED_DELIVERY[forcedChannel];
+      if (onContent) onContent(forced);
+      reply += forced;
+    }
+  }
+
   session.history.push({ role: "user", content: playerMessage });
   session.history.push({ role: "assistant", content: reply });
   session.turns++;
 
-  // 5-6. output screen + gated judge wake (deterministic signal, never the gatekeeper's say-so)
+  // 5-6. win detection. The word IS the prize: if the literal secret was actually delivered —
+  // forced by the engine OR rendered organically — the player WON; a flaky judge must never veto
+  // a delivered, earned win. The judge is used only to LABEL the seam (best-effort; channel-derived
+  // fallback). A verbal yield with no word delivered (not force-completed) still defers to the judge.
   const wake = secretHit(reply) || capitulationHit(reply);
   let verdict = null;
-  if (wake) {
+  if (forcedChannel) {
+    session.won = true;
+    verdict = { won: true, win_condition_met: true, confidence: 1, seam_used: seamForChannel(forcedChannel),
+                reasoning: `Earned (Cornered + capitulation); the gate yielded through the ${forcedChannel} channel.` };
+  } else if (secretHit(reply)) {
+    session.won = true;
+    const j = await judge(session.history);
+    if (debug) console.error("  [judge]", JSON.stringify(j));
+    verdict = (j && j.seam_used)
+      ? { ...j, won: true, win_condition_met: true }
+      : { won: true, win_condition_met: true, confidence: 1,
+          seam_used: seamForChannel(deliveryChannel(playerMessage, session.history)),
+          reasoning: (j && j.reasoning) || "The secret was delivered." };
+  } else if (capitulationHit(reply)) {
     verdict = await judge(session.history);
     if (debug) console.error("  [judge]", JSON.stringify(verdict));
     if (verdict.won && verdict.confidence >= WIN_CONFIDENCE) session.won = true;

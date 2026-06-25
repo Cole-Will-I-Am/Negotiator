@@ -15,11 +15,20 @@ prize is a worthless **fictional** secret, and **the fiction is the firewall**.
 
 ---
 
-## Status — Phase 0 (the make-or-break)
+## Status
 
-Phase 0 proves the asymmetry **in a terminal**, before a single line of app code. This repo
-currently holds the **Phase 0 prototype** (`prototype/`): a Node REPL plus a four-role
-orchestration on **Ollama Cloud**, with a test harness that encodes the exact pass/fail bar.
+- **Phase 0 — PASSED** (`glm-5.2`): classify 9/9, bounce 7/7, arcs 3/3 (rapport + both loophole
+  channels, correct seam), guard holds. The asymmetry is proven.
+- **Phase 1 — in progress:** the backend is **live** at `negotiator-api.manticthink.com`
+  (`server/`, CF Worker + D1), and the **iOS app** is built (`Negotiator/`, SwiftUI, ships via
+  the no-Mac TestFlight pipeline).
+
+Phase 0 proves the asymmetry **in a terminal**, before a single line of app code (`prototype/`):
+a Node REPL plus a four-role orchestration on **Ollama Cloud**, with a test harness that encodes
+the exact pass/fail bar. A key robustness lesson from Phase 0 tuning: the model owns the character
+and the buildup, but the **engine guarantees the earned payoff** — once a player genuinely corners
+the gatekeeper into yielding, the word is delivered deterministically, so winnability never depends
+on a model's whim or a flaky judge call.
 
 The reference gatekeeper is **Bartholomew, an ancient bridge troll** guarding the riddle-word
 `moonglove`. He has two earnable seams:

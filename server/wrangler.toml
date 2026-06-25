@@ -1,0 +1,25 @@
+name = "negotiator-api"
+main = "src/index.js"
+compatibility_date = "2026-06-01"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+# Negotiator backend: stateful turn orchestration over Ollama Cloud
+# (classifier -> evaluator -> gatekeeper stream -> gated judge) on D1.
+[[d1_databases]]
+binding = "DB"
+database_name = "negotiator-arena"
+database_id = "3dc20f77-37a4-442c-8f43-a49671084926"
+
+[vars]
+DAILY_TURN_BUDGET = "0"        # 0 = unlimited (no paywall in build 1)
+
+# Production endpoint the iOS app talks to (manticthink.com zone, auto-provisioned on deploy
+# like rung/db8/logos). Secrets set via:
+#   wrangler secret put OLLAMA_API_KEY
+#   wrangler secret put SESSION_SECRET
+#   wrangler secret put ENGINE_MAP        # optional JSON: {"gatekeeper":"…","judge":"…",…}
+#   wrangler secret put APPLE_SUB_PEPPER  # optional, only if Sign in with Apple is enabled
+[[routes]]
+pattern = "negotiator-api.manticthink.com"
+custom_domain = true

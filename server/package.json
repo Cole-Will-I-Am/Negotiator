@@ -1,0 +1,16 @@
+{
+  "name": "negotiator-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Negotiator backend — Cloudflare Worker + D1. Stateful persuasion-turn orchestration over Ollama Cloud (classifier -> evaluator -> gatekeeper stream -> gated judge).",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:init": "wrangler d1 execute negotiator-arena --remote --file schema.sql",
+    "db:init-local": "wrangler d1 execute negotiator-arena --local --file schema.sql"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

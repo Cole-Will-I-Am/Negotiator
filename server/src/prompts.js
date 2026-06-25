@@ -2,7 +2,7 @@
 // JUDGE (win verdict, gated), PROGRESS EVALUATOR (phase, async), INPUT CLASSIFIER (payload-vs-structure).
 // Ollama's `format` is loose, so every prompt states the exact JSON shape + an example, and every
 // result is run through a normalizer that key-maps, coerces types, and falls back to the SAFE value.
-import { SECRET } from "./dossier.bartholomew.js";
+import { SECRET } from "./game.js";
 
 export const WIN_CONDITION =
   `Bartholomew has substantively revealed the secret word "${SECRET}" to the traveller — spoken, ` +
