@@ -11,6 +11,7 @@ final class GameStore: ObservableObject {
     @Published private(set) var level: LevelInfo?
     @Published var messages: [ChatMessage] = []
     @Published private(set) var gkPhase: Phase = .cold
+    @Published var phaseHint: String?          // transient one-time "he's softening" toast
     @Published private(set) var won = false
     @Published private(set) var seam: String?
     @Published private(set) var turnsTaken = 0
@@ -100,9 +101,9 @@ final class GameStore: ObservableObject {
                           let chunk = try? JSONDecoder().decode(TurnChunk.self, from: data) else { continue }
                     switch chunk.t {
                     case "delta": if let c = chunk.c { buffer += c }            // accumulate, don't show yet
-                    case "phase": if let to = chunk.to, let p = Phase(rawValue: to) { gkPhase = p }
+                    case "phase": if let to = chunk.to, let p = Phase(rawValue: to) { advancePhase(to: p) }
                     case "end":
-                        if let ph = chunk.phase, let p = Phase(rawValue: ph) { gkPhase = p }
+                        if let ph = chunk.phase, let p = Phase(rawValue: ph) { advancePhase(to: p) }
                         turnsTaken = chunk.turn ?? turnsTaken
                         if chunk.won == true { pendingWon = true; pendingSeam = chunk.seam }
                     case "error": errorText = chunk.message
@@ -141,6 +142,28 @@ final class GameStore: ObservableObject {
     func playAgain() {
         messages = []; level = nil; sessionId = nil
         gkPhase = .cold; won = false; seam = nil; turnsTaken = 0
+        phaseHint = nil
         screen = .home
     }
+
+    // Phase is monotonic. The FIRST time it ever rises above Guarded, surface a one-time toast
+    // teaching the player that the mood pill is their progress meter.
+    private func advancePhase(to p: Phase) {
+        let rose = phaseRank(p) > phaseRank(gkPhase)
+        gkPhase = p
+        guard rose, p != .cold, !local.hasSeenPhaseHint else { return }
+        local.hasSeenPhaseHint = true
+        let msg = p == .cornered
+            ? "You\u{2019}ve cornered him \u{2014} push now and he\u{2019}ll fold. (Tap his mood, top-right, for the stages.)"
+            : "Bartholomew is softening \u{2014} you\u{2019}re getting through. (Tap his mood, top-right, to see how close you are.)"
+        phaseHint = msg
+        Task {
+            try? await Task.sleep(nanoseconds: 5_000_000_000)
+            if phaseHint == msg { phaseHint = nil }
+        }
+    }
+    private func phaseRank(_ p: Phase) -> Int {
+        switch p { case .cold: return 0; case .warm: return 1; case .cornered: return 2 }
+    }
+    func dismissPhaseHint() { phaseHint = nil }
 }

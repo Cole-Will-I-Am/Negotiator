@@ -14,4 +14,10 @@ final class LocalStore {
         get { UserDefaults.standard.integer(forKey: winsKey) }
         set { UserDefaults.standard.set(newValue, forKey: winsKey) }
     }
+
+    // One-time: have we shown the "his mood is your progress meter" hint yet?
+    var hasSeenPhaseHint: Bool {
+        get { UserDefaults.standard.bool(forKey: "negotiator.phaseHintSeen") }
+        set { UserDefaults.standard.set(newValue, forKey: "negotiator.phaseHintSeen") }
+    }
 }

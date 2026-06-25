@@ -4,6 +4,7 @@ struct ConversationView: View {
     @EnvironmentObject var store: GameStore
     @State private var draft = ""
     @State private var showHowTo = false
+    @State private var showPhaseInfo = false
     @FocusState private var inputFocused: Bool
 
     var body: some View {
@@ -14,9 +15,29 @@ struct ConversationView: View {
             composer
         }
         .background(Palette.paper.ignoresSafeArea())
+        .overlay(alignment: .top) { phaseToast }
+        .animation(.easeInOut(duration: 0.3), value: store.phaseHint)
         .sheet(isPresented: $showHowTo) { HowToPlayView() }
         .onChange(of: store.gkPhase) { _, _ in Haptics.soften() }
         .onChange(of: store.won) { _, won in if won { Haptics.win() } }
+    }
+
+    // One-time coach toast the first time the gatekeeper softens (teaches the mood meter).
+    @ViewBuilder private var phaseToast: some View {
+        if let hint = store.phaseHint {
+            Text(hint)
+                .font(Type.small).foregroundStyle(Palette.trollText)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, Metrics.s4).padding(.vertical, 10)
+                .background(Palette.troll)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .shadow(color: .black.opacity(0.18), radius: 8, y: 3)
+                .padding(.horizontal, Metrics.s6)
+                .padding(.top, 64)
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .onTapGesture { store.dismissPhaseHint() }
+        }
     }
 
     private var header: some View {
@@ -29,7 +50,11 @@ struct ConversationView: View {
                 Text(store.level?.title ?? "The Mossback Bridge").font(Type.small).foregroundStyle(Palette.inkSoft)
             }
             Spacer()
-            PhasePill(phase: store.gkPhase)
+            Button { Haptics.tap(); showPhaseInfo = true } label: { PhasePill(phase: store.gkPhase) }
+                .popover(isPresented: $showPhaseInfo) {
+                    PhaseLadder(current: store.gkPhase)
+                        .presentationCompactAdaptation(.popover)
+                }
             Button { showHowTo = true } label: {
                 Image(systemName: "questionmark.circle").font(.system(size: 20)).foregroundStyle(Palette.inkSoft)
             }
