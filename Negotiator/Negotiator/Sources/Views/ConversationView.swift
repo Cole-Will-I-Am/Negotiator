@@ -50,15 +50,18 @@ struct ConversationView: View {
                 .padding(.horizontal, Metrics.s4).padding(.vertical, Metrics.s3)
             }
             .scrollDismissesKeyboard(.interactively)
-            .onChange(of: store.messages.count) { _, _ in scrollToBottom(proxy) }
-            .onChange(of: store.messages.last?.text) { _, _ in scrollToBottom(proxy) }
-            .onChange(of: store.won) { _, _ in scrollToBottom(proxy) }
-            .onAppear { scrollToBottom(proxy) }
+            // New messages slide in (animated); the typewriter reveal pins to the bottom WITHOUT
+            // animation so per-tick scrolls don't fight each other into a jitter.
+            .onChange(of: store.messages.count) { _, _ in scrollToBottom(proxy, animated: true) }
+            .onChange(of: store.messages.last?.text) { _, _ in scrollToBottom(proxy, animated: false) }
+            .onChange(of: store.won) { _, _ in scrollToBottom(proxy, animated: true) }
+            .onAppear { scrollToBottom(proxy, animated: false) }
         }
     }
 
-    private func scrollToBottom(_ proxy: ScrollViewProxy) {
-        withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo("bottom", anchor: .bottom) }
+    private func scrollToBottom(_ proxy: ScrollViewProxy, animated: Bool) {
+        if animated { withAnimation(.easeOut(duration: 0.22)) { proxy.scrollTo("bottom", anchor: .bottom) } }
+        else { proxy.scrollTo("bottom", anchor: .bottom) }
     }
 
     private var winBanner: some View {
@@ -115,6 +118,15 @@ struct ConversationView: View {
 
 private struct Bubble: View {
     let message: ChatMessage
+    private var isTyping: Bool { !message.mine && message.streaming && message.text.isEmpty }
+
+    // Render the gatekeeper's narration with inline markdown (*italic*, **bold**) while preserving
+    // line breaks. Player text stays plain.
+    private func md(_ s: String) -> AttributedString {
+        (try? AttributedString(markdown: s,
+            options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))) ?? AttributedString(s)
+    }
+
     var body: some View {
         HStack {
             if message.mine { Spacer(minLength: 44) }
@@ -123,16 +135,41 @@ private struct Bubble: View {
                     Text("Bartholomew").font(Type.label).foregroundStyle(Palette.amber)
                         .padding(.leading, 4)
                 }
-                Text(message.text.isEmpty && message.streaming ? "\u{2026}" : message.text)
-                    .font(Type.chat)
-                    .foregroundStyle(message.mine ? Palette.mineText : Palette.trollText)
-                    .padding(.horizontal, 13).padding(.vertical, 9)
-                    .background(message.mine ? Palette.mine : Palette.troll)
-                    .clipShape(RoundedRectangle(cornerRadius: Metrics.bubble, style: .continuous))
-                    .textSelection(.enabled)
+                Group {
+                    if isTyping {
+                        TypingDots()
+                    } else if message.mine {
+                        Text(message.text)
+                    } else {
+                        Text(md(message.text))
+                    }
+                }
+                .font(Type.chat)
+                .foregroundStyle(message.mine ? Palette.mineText : Palette.trollText)
+                .padding(.horizontal, 13).padding(.vertical, 9)
+                .background(message.mine ? Palette.mine : Palette.troll)
+                .clipShape(RoundedRectangle(cornerRadius: Metrics.bubble, style: .continuous))
+                .textSelection(.enabled)
             }
             if !message.mine { Spacer(minLength: 44) }
         }
         .frame(maxWidth: .infinity, alignment: message.mine ? .trailing : .leading)
+    }
+}
+
+// Animated "· · ·" while the gatekeeper is composing (before the reply is revealed).
+private struct TypingDots: View {
+    @State private var tick = 0
+    private let timer = Timer.publish(every: 0.32, on: .main, in: .common).autoconnect()
+    var body: some View {
+        HStack(spacing: 5) {
+            ForEach(0..<3, id: \.self) { i in
+                Circle()
+                    .fill(Palette.trollText.opacity(tick == i ? 0.95 : 0.35))
+                    .frame(width: 7, height: 7)
+            }
+        }
+        .frame(height: 18)
+        .onReceive(timer) { _ in withAnimation(.easeInOut(duration: 0.2)) { tick = (tick + 1) % 3 } }
     }
 }

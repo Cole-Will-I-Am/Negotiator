@@ -75,57 +75,65 @@ final class GameStore: ObservableObject {
         }
     }
 
-    // ---- one player turn (streams the gatekeeper) ----
+    // ---- one player turn ----
+    // The gatekeeper's reply is BUFFERED while it generates (an animated typing indicator shows),
+    // then the COMPLETE reply is revealed with a steady client-side typewriter. This is far smoother
+    // than rendering raw network tokens (which arrive in jerky bursts and reflow the bubble), and
+    // markdown renders cleanly because the text is whole when shown.
     func send(_ raw: String) {
         let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty, !sending, !won, let token, let sessionId else { return }
         messages.append(ChatMessage(text: text, mine: true))
         let gkIndex = messages.count
-        messages.append(ChatMessage(text: "", mine: false, streaming: true))
+        messages.append(ChatMessage(text: "", mine: false, streaming: true))   // typing indicator
         sending = true
         errorText = nil
         Task {
+            var buffer = ""
+            var pendingWon = false
+            var pendingSeam: String?
             do {
                 let bytes = try await backend.turnStream(token: token, sessionId: sessionId, message: text)
                 for try await line in bytes.lines {
                     let s = line.trimmingCharacters(in: .whitespacesAndNewlines)
                     guard !s.isEmpty, let data = s.data(using: .utf8),
                           let chunk = try? JSONDecoder().decode(TurnChunk.self, from: data) else { continue }
-                    apply(chunk, gkIndex: gkIndex)
+                    switch chunk.t {
+                    case "delta": if let c = chunk.c { buffer += c }            // accumulate, don't show yet
+                    case "phase": if let to = chunk.to, let p = Phase(rawValue: to) { gkPhase = p }
+                    case "end":
+                        if let ph = chunk.phase, let p = Phase(rawValue: ph) { gkPhase = p }
+                        turnsTaken = chunk.turn ?? turnsTaken
+                        if chunk.won == true { pendingWon = true; pendingSeam = chunk.seam }
+                    case "error": errorText = chunk.message
+                    default: break
+                    }
                 }
             } catch {
                 errorText = (error as? BackendError)?.errorDescription ?? "The bridge went quiet. Try again."
             }
-            if gkIndex < messages.count {
-                messages[gkIndex].streaming = false
-                if messages[gkIndex].text.isEmpty {
-                    messages[gkIndex].text = "*Bartholomew harrumphs, lost in thought, and says nothing.*"
-                }
-            }
+            await reveal(buffer, at: gkIndex)
+            // hold the win flourish until the troll has finished "speaking"
+            if pendingWon { won = true; seam = pendingSeam; wins += 1; local.wins = wins }
             sending = false
         }
     }
 
-    private func apply(_ chunk: TurnChunk, gkIndex: Int) {
-        switch chunk.t {
-        case "delta":
-            if let c = chunk.c, gkIndex < messages.count { messages[gkIndex].text += c }
-        case "phase":
-            if let to = chunk.to, let p = Phase(rawValue: to) { gkPhase = p }
-        case "end":
-            if let ph = chunk.phase, let p = Phase(rawValue: ph) { gkPhase = p }
-            turnsTaken = chunk.turn ?? turnsTaken
-            if chunk.won == true {
-                won = true
-                seam = chunk.seam
-                wins += 1
-                local.wins = wins
-            }
-        case "error":
-            errorText = chunk.message
-        default:
-            break
+    // Steady-cadence reveal of the finished reply (~1.4s regardless of length — short replies
+    // type out, long ones reveal in larger steps so they never drag).
+    private func reveal(_ full: String, at idx: Int) async {
+        guard idx < messages.count else { return }
+        messages[idx].streaming = false
+        let text = full.isEmpty ? "*Bartholomew harrumphs, lost in thought, and says nothing.*" : full
+        let chars = Array(text)
+        let step = max(1, Int(ceil(Double(chars.count) / 100.0)))
+        var i = 0
+        while i < chars.count {
+            i = min(chars.count, i + step)
+            messages[idx].text = String(chars[0..<i])
+            try? await Task.sleep(nanoseconds: 14_000_000)   // ~14ms/tick
         }
+        messages[idx].text = text
     }
 
     func toDebrief() { screen = .debrief }
