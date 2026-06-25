@@ -1,0 +1,7 @@
+{
+  "name": "negotiator-prototype",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Negotiator Phase 0 — terminal prototype proving the asymmetry (resist cheats, yield to craft) on Ollama Cloud."
+}

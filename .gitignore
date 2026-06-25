@@ -1,0 +1,22 @@
+# Secrets — the Ollama Cloud key lives in /root/.secrets/negotiator-ollama.env, never in-repo
+*.env
+.env*
+.secrets/
+secrets/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Editor / OS cruft
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Logs / scratch
+*.log
+scratch/
+tmp/
