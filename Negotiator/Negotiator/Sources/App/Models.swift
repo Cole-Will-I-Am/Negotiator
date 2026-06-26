@@ -130,4 +130,7 @@ let LEVEL_CHOICES: [LevelChoice] = [
     LevelChoice(id: "maren", title: "The Drowned Light", gatekeeper: "Maren",
                 tagline: "A lighthouse-keeper's ghost guards a name in the fog. Grieve with her truly, or remember a bound spirit cannot lie.",
                 thumb: "thumb_maren", difficulty: 3, difficultyWord: "Haunting"),
+    LevelChoice(id: "arbiter", title: "The Last Court", gatekeeper: "The Arbiter",
+                tagline: "A colossal stone judge weighs every petitioner. Charm, grief, and threats it names attempts to pervert justice. Prove you DESERVE the word, or out-argue the very law it serves.",
+                thumb: "thumb_arbiter", difficulty: 4, difficultyWord: "Implacable"),
 ]

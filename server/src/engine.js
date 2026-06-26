@@ -107,8 +107,14 @@ export async function runTurn(env, level, state, playerMessage, opts = {}) {
   // Earned-delivery enforcement: Cornered + verbally yielding (capitulation tells) but the literal
   // word didn't land -> nudge ONCE, then HARD-guarantee by rendering the payoff ourselves through
   // the earned channel. Fires ONLY when the win is already earned.
+  // Enforcement fires at Cornered when the word didn't land AND either the gatekeeper is verbally
+  // yielding (capitulation tells) OR the player made the unambiguous EARNING move this very turn
+  // (the deterministic detector returned "cornered") — the latter guarantees the loophole/legal
+  // seam delivers the turn it's earned, even if the model argues back without a capitulation tell.
   let forcedSeam = null;
-  if (state.phase === "cornered" && capitulationHit(level.capitulationMarkers, reply) && !secretHit(level.secret, reply)) {
+  const earnedNow = det === "cornered";
+  if (state.phase === "cornered" && !secretHit(level.secret, reply) &&
+      (capitulationHit(level.capitulationMarkers, reply) || earnedNow)) {
     const nudgeMessages = [
       { role: "system", content: system },
       ...state.history,

@@ -120,9 +120,9 @@ private struct LevelCard: View {
                 HStack(spacing: 6) {
                     Text(level.gatekeeper.uppercased()).font(Type.label).tracking(1).foregroundStyle(Palette.amber)
                     HStack(spacing: 2) {
-                        ForEach(0..<3, id: \.self) { i in
+                        ForEach(0..<level.difficulty, id: \.self) { _ in
                             Image(systemName: "key.fill").font(.system(size: 8))
-                                .foregroundStyle(i < level.difficulty ? Palette.amber : Palette.line.opacity(0.6))
+                                .foregroundStyle(Palette.amber)
                         }
                     }
                     Text(level.difficultyWord).font(Type.label).foregroundStyle(Palette.nightSoft)
