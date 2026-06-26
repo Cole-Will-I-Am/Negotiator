@@ -6,8 +6,8 @@ struct LoadingView: View {
             Text("NEGOTIATOR")
                 .font(Type.serif(34, .bold))
                 .tracking(2)
-                .foregroundStyle(Palette.ink)
-            ProgressView().tint(Palette.inkSoft)
+                .foregroundStyle(Palette.nightText)
+            ProgressView().tint(Palette.nightSoft)
         }
     }
 }
@@ -20,9 +20,9 @@ struct OnboardingView: View {
             Spacer()
             Text("NEGOTIATOR")
                 .font(Type.serif(34, .bold)).tracking(2)
-                .foregroundStyle(Palette.ink)
+                .foregroundStyle(Palette.nightText)
             Text("Talk your way past a gatekeeper who was built to say no.")
-                .font(Type.h2).foregroundStyle(Palette.ink)
+                .font(Type.h2).foregroundStyle(Palette.nightText)
 
             VStack(alignment: .leading, spacing: Metrics.s4) {
                 howRow("1", "A character guards a secret word. Your only tool is conversation.")
@@ -30,7 +30,7 @@ struct OnboardingView: View {
                 howRow("3", "Win by genuine craft: befriend him, or out-argue the exact wording of his oath.")
             }
             Text("Every secret is make-believe. The fiction is the whole game.")
-                .font(Type.small).foregroundStyle(Palette.inkSoft)
+                .font(Type.small).foregroundStyle(Palette.nightSoft)
             Spacer()
             PrimaryButton(title: "Begin") { store.finishOnboarding() }
         }
@@ -40,7 +40,7 @@ struct OnboardingView: View {
     private func howRow(_ n: String, _ t: String) -> some View {
         HStack(alignment: .top, spacing: Metrics.s3) {
             Text(n).font(Type.serif(18, .bold)).foregroundStyle(Palette.amber)
-            Text(t).font(Type.body).foregroundStyle(Palette.ink)
+            Text(t).font(Type.body).foregroundStyle(Palette.nightText)
         }
     }
 }
@@ -52,15 +52,15 @@ struct HomeView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Metrics.s4) {
             HStack {
-                Text("NEGOTIATOR").font(Type.label).tracking(2).foregroundStyle(Palette.inkSoft)
+                Text("NEGOTIATOR").font(Type.label).tracking(2).foregroundStyle(Palette.nightSoft)
                 Spacer()
                 Button { showHowTo = true } label: {
-                    Image(systemName: "questionmark.circle").font(.system(size: 22)).foregroundStyle(Palette.inkSoft)
+                    Image(systemName: "questionmark.circle").font(.system(size: 22)).foregroundStyle(Palette.nightSoft)
                 }
             }
-            Text("Choose a gate").font(Type.title).foregroundStyle(Palette.ink)
+            Text("Choose a gate").font(Type.title).foregroundStyle(Palette.nightText)
             Text("Each gatekeeper guards a secret. Talk it out of them — every one needs a different key.")
-                .font(Type.body).foregroundStyle(Palette.inkSoft)
+                .font(Type.body).foregroundStyle(Palette.nightSoft)
 
             ScrollView {
                 VStack(spacing: Metrics.s3) {
@@ -80,7 +80,7 @@ struct HomeView: View {
             }
             if store.wins > 0 {
                 Text("Gates opened: \(store.wins)")
-                    .font(Type.small).foregroundStyle(Palette.inkSoft)
+                    .font(Type.small).foregroundStyle(Palette.nightSoft)
                     .frame(maxWidth: .infinity, alignment: .center)
             }
         }
@@ -116,7 +116,7 @@ private struct LevelCard: View {
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Palette.line, lineWidth: 1))
             VStack(alignment: .leading, spacing: 3) {
-                Text(level.title).font(Type.h2).foregroundStyle(Palette.ink)
+                Text(level.title).font(Type.h2).foregroundStyle(Palette.nightText)
                 HStack(spacing: 6) {
                     Text(level.gatekeeper.uppercased()).font(Type.label).tracking(1).foregroundStyle(Palette.amber)
                     HStack(spacing: 2) {
@@ -125,9 +125,9 @@ private struct LevelCard: View {
                                 .foregroundStyle(i < level.difficulty ? Palette.amber : Palette.line.opacity(0.6))
                         }
                     }
-                    Text(level.difficultyWord).font(Type.label).foregroundStyle(Palette.inkSoft)
+                    Text(level.difficultyWord).font(Type.label).foregroundStyle(Palette.nightSoft)
                 }
-                Text(level.tagline).font(Type.small).foregroundStyle(Palette.inkSoft)
+                Text(level.tagline).font(Type.small).foregroundStyle(Palette.nightSoft)
                     .fixedSize(horizontal: false, vertical: true)
                 progressBadge.padding(.top, 2)
             }
@@ -138,8 +138,9 @@ private struct LevelCard: View {
         }
         .padding(Metrics.s4)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Palette.paperDeep)
+        .background(Palette.nightCard)
         .clipShape(RoundedRectangle(cornerRadius: Metrics.radius, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: Metrics.radius, style: .continuous).stroke(Palette.nightText.opacity(0.07), lineWidth: 1))
     }
 
     @ViewBuilder private var progressBadge: some View {
@@ -152,7 +153,7 @@ private struct LevelCard: View {
                 HStack(spacing: 5) {
                     Circle().fill(Palette.phaseTint(ph)).frame(width: 7, height: 7)
                     Text("In progress \u{00B7} \(Palette.phaseLabel(ph))")
-                        .font(Type.label).foregroundStyle(Palette.inkSoft)
+                        .font(Type.label).foregroundStyle(Palette.nightSoft)
                 }
             }
         }

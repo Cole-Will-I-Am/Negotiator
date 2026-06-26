@@ -7,7 +7,7 @@ struct HowToPlayView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: Metrics.s6) {
                 HStack {
-                    Text("How to play").font(Type.title).foregroundStyle(Palette.ink)
+                    Text("How to play").font(Type.title).foregroundStyle(Palette.nightText)
                     Spacer()
                     Button("Done") { dismiss() }.font(Type.body).foregroundStyle(Palette.amber)
                 }
@@ -25,20 +25,20 @@ struct HowToPlayView: View {
                 Divider().overlay(Palette.line)
                 Toggle(isOn: $store.cinematicsEnabled) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Play cutscenes").font(Type.h2).foregroundStyle(Palette.ink)
-                        Text("Turn off for faster, motion-free play.").font(Type.small).foregroundStyle(Palette.inkSoft)
+                        Text("Play cutscenes").font(Type.h2).foregroundStyle(Palette.nightText)
+                        Text("Turn off for faster, motion-free play.").font(Type.small).foregroundStyle(Palette.nightSoft)
                     }
                 }
-                .tint(Palette.troll)
+                .tint(Palette.gold)
             }
             .padding(Metrics.s6)
         }
-        .background(Palette.paper.ignoresSafeArea())
+        .background(Palette.nightGradient.ignoresSafeArea())
     }
     private func section(_ title: String, _ body: String) -> some View {
         VStack(alignment: .leading, spacing: Metrics.s2) {
-            Text(title).font(Type.h2).foregroundStyle(Palette.ink)
-            Text(body).font(Type.body).foregroundStyle(Palette.inkSoft)
+            Text(title).font(Type.h2).foregroundStyle(Palette.nightText)
+            Text(body).font(Type.body).foregroundStyle(Palette.nightSoft)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }

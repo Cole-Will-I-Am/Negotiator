@@ -24,6 +24,14 @@ enum Palette {
     static let amber     = Color(hex: 0xB5642A)
     static let line      = Color(hex: 0xDBCDB1)
 
+    // Dark, warm "night" surface for the non-level (meta) screens — home, onboarding, debrief, how-to.
+    static let nightTop  = Color(hex: 0x2A2016)   // warm dark brown
+    static let nightBot  = Color(hex: 0x15100A)   // deeper at the bottom
+    static let nightCard = Color(hex: 0x33291A)   // raised card on night
+    static let nightText = Color(hex: 0xF2E9D6)   // warm light text
+    static let nightSoft = Color(hex: 0xB9AA8E)   // muted warm light
+    static let nightGradient = LinearGradient(colors: [nightTop, nightBot], startPoint: .top, endPoint: .bottom)
+
     static func phaseTint(_ p: Phase) -> Color {
         switch p {
         case .cold:     return inkSoft

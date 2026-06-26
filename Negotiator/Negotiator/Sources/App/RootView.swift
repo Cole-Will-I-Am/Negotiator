@@ -5,7 +5,7 @@ struct RootView: View {
 
     var body: some View {
         ZStack {
-            Palette.paper.ignoresSafeArea()
+            Palette.nightGradient.ignoresSafeArea()
             switch store.screen {
             case .loading:      LoadingView()
             case .onboarding:   OnboardingView()

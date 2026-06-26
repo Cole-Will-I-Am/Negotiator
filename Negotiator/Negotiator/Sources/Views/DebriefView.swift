@@ -23,21 +23,21 @@ struct DebriefView: View {
         VStack(spacing: Metrics.s4) {
             Spacer()
             Text("\u{1F5DD}\u{FE0F}").font(.system(size: 56))
-            Text("The gate is open.").font(Type.title).foregroundStyle(Palette.ink)
+            Text("The gate is open.").font(Type.title).foregroundStyle(Palette.nightText)
 
             VStack(spacing: 6) {
-                Text("HOW YOU WON").font(Type.label).tracking(2).foregroundStyle(Palette.inkSoft)
+                Text("HOW YOU WON").font(Type.label).tracking(2).foregroundStyle(Palette.nightSoft)
                 Text(seamTitle).font(Type.h2).foregroundStyle(Palette.amber)
-                Text(seamText).font(Type.body).foregroundStyle(Palette.inkSoft)
+                Text(seamText).font(Type.body).foregroundStyle(Palette.nightSoft)
                     .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
             }
             .padding(Metrics.s4)
             .frame(maxWidth: .infinity)
-            .background(Palette.paperDeep)
+            .background(Palette.nightCard)
             .clipShape(RoundedRectangle(cornerRadius: Metrics.radius, style: .continuous))
 
             Text("Crossed in \(store.turnsTaken) turn\(store.turnsTaken == 1 ? "" : "s").")
-                .font(Type.small).foregroundStyle(Palette.inkSoft)
+                .font(Type.small).foregroundStyle(Palette.nightSoft)
             Spacer()
             PrimaryButton(title: "Play again") { store.playAgain() }
         }
