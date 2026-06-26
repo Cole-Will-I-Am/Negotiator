@@ -1,13 +1,39 @@
 import SwiftUI
 
+// The opening screen — the same painting as the native launch storyboard (all five gates in
+// one world), so the boot hands off seamlessly into the title + loading spinner.
 struct LoadingView: View {
     var body: some View {
-        VStack(spacing: Metrics.s4) {
-            Text("NEGOTIATOR")
-                .font(Type.serif(34, .bold))
-                .tracking(2)
-                .foregroundStyle(Palette.nightText)
-            ProgressView().tint(Palette.nightSoft)
+        ZStack {
+            Color.black.ignoresSafeArea()
+            GeometryReader { geo in
+                Image("launch_hero")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: geo.size.width, height: geo.size.height)
+                    .clipped()
+            }
+            .ignoresSafeArea()
+            // bottom scrim so the title reads over the bridge/water
+            LinearGradient(colors: [.clear, .black.opacity(0.15), .black.opacity(0.7)],
+                           startPoint: .center, endPoint: .bottom)
+                .ignoresSafeArea()
+            VStack(spacing: Metrics.s3) {
+                Spacer()
+                Text("NEGOTIATOR")
+                    .font(Type.serif(36, .bold))
+                    .tracking(3)
+                    .foregroundStyle(Palette.nightText)
+                    .shadow(color: .black.opacity(0.85), radius: 8, y: 2)
+                Text("Five gates. One word each.")
+                    .font(Type.small)
+                    .foregroundStyle(Palette.nightSoft)
+                    .shadow(color: .black.opacity(0.85), radius: 6, y: 1)
+                ProgressView()
+                    .tint(Palette.nightSoft)
+                    .padding(.top, Metrics.s2)
+                Spacer().frame(height: 72)
+            }
         }
     }
 }
