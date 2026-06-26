@@ -10,16 +10,29 @@ struct ConversationView: View {
     var body: some View {
         VStack(spacing: 0) {
             header
-            Divider().overlay(Palette.line)
+            Divider().overlay(Color.white.opacity(0.10))
             thread
             composer
         }
-        .background(Palette.paper.ignoresSafeArea())
+        .background(chatBackground)
         .overlay(alignment: .top) { phaseToast }
         .animation(.easeInOut(duration: 0.3), value: store.phaseHint)
         .sheet(isPresented: $showHowTo) { HowToPlayView() }
         .onChange(of: store.gkPhase) { _, _ in Haptics.soften() }
         .onChange(of: store.won) { _, won in if won { Haptics.win() } }
+    }
+
+    // Level-1 atmosphere: the painted Mossback Bridge behind the conversation, with a scrim that
+    // darkens top (header) and bottom (composer) for legibility while the art shows mid-screen.
+    private var chatBackground: some View {
+        ZStack {
+            Image("chat_bg_bartholomew").resizable().scaledToFill()
+            LinearGradient(
+                colors: [Palette.ink.opacity(0.70), Palette.ink.opacity(0.34),
+                         Palette.ink.opacity(0.42), Palette.ink.opacity(0.88)],
+                startPoint: .top, endPoint: .bottom)
+        }
+        .ignoresSafeArea()
     }
 
     // One-time coach toast the first time the gatekeeper softens (teaches the mood meter).
@@ -43,11 +56,11 @@ struct ConversationView: View {
     private var header: some View {
         HStack(spacing: Metrics.s3) {
             Button { store.playAgain() } label: {
-                Image(systemName: "chevron.left").font(.system(size: 18, weight: .semibold)).foregroundStyle(Palette.inkSoft)
+                Image(systemName: "chevron.left").font(.system(size: 18, weight: .semibold)).foregroundStyle(Palette.paper)
             }
             VStack(alignment: .leading, spacing: 1) {
-                Text(store.level?.gatekeeper ?? "Bartholomew").font(Type.h2).foregroundStyle(Palette.ink)
-                Text(store.level?.title ?? "The Mossback Bridge").font(Type.small).foregroundStyle(Palette.inkSoft)
+                Text(store.level?.gatekeeper ?? "Bartholomew").font(Type.h2).foregroundStyle(Palette.paper)
+                Text(store.level?.title ?? "The Mossback Bridge").font(Type.small).foregroundStyle(Palette.paper.opacity(0.72))
             }
             Spacer()
             Button { Haptics.tap(); showPhaseInfo = true } label: { PhasePill(phase: store.gkPhase) }
@@ -56,7 +69,7 @@ struct ConversationView: View {
                         .presentationCompactAdaptation(.popover)
                 }
             Button { showHowTo = true } label: {
-                Image(systemName: "questionmark.circle").font(.system(size: 20)).foregroundStyle(Palette.inkSoft)
+                Image(systemName: "questionmark.circle").font(.system(size: 20)).foregroundStyle(Palette.paper)
             }
         }
         .padding(.horizontal, Metrics.s4).padding(.vertical, Metrics.s3)
@@ -92,12 +105,13 @@ struct ConversationView: View {
     private var winBanner: some View {
         VStack(spacing: Metrics.s3) {
             Text("\u{1F5DD}\u{FE0F}  You talked your way in.")
-                .font(Type.h2).foregroundStyle(Palette.ink)
+                .font(Type.h2).foregroundStyle(Palette.paper)
             PrimaryButton(title: "See how you did") { store.toDebrief() }
         }
         .padding(Metrics.s4)
         .frame(maxWidth: .infinity)
-        .background(Palette.gold.opacity(0.16))
+        .background(Palette.ink.opacity(0.6))
+        .overlay(RoundedRectangle(cornerRadius: Metrics.radius, style: .continuous).stroke(Palette.gold.opacity(0.5), lineWidth: 1))
         .clipShape(RoundedRectangle(cornerRadius: Metrics.radius, style: .continuous))
         .padding(.top, Metrics.s2)
     }
@@ -113,22 +127,25 @@ struct ConversationView: View {
                 TextField(store.won ? "The gate is open." : "Say something to the troll\u{2026}",
                           text: $draft, axis: .vertical)
                     .font(Type.chat).lineLimit(1...5)
+                    .foregroundStyle(Palette.trollText)
+                    .tint(Palette.gold)
                     .focused($inputFocused)
                     .padding(.horizontal, Metrics.s3).padding(.vertical, 10)
-                    .background(Palette.paperDeep)
+                    .background(Color.black.opacity(0.34))
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.white.opacity(0.10), lineWidth: 1))
                     .disabled(store.won)
                 Button { sendDraft() } label: {
                     Image(systemName: store.sending ? "circle.dotted" : "arrow.up.circle.fill")
                         .font(.system(size: 32))
-                        .foregroundStyle(canSend ? Palette.troll : Palette.line)
+                        .foregroundStyle(canSend ? Palette.gold : Palette.paper.opacity(0.3))
                         .symbolEffect(.pulse, isActive: store.sending)
                 }
                 .disabled(!canSend)
             }
             .padding(.horizontal, Metrics.s4).padding(.vertical, Metrics.s3)
         }
-        .background(Palette.paper)
+        .background(Palette.ink.opacity(0.6))
     }
 
     private var canSend: Bool {
@@ -174,6 +191,7 @@ private struct Bubble: View {
                 .padding(.horizontal, 13).padding(.vertical, 9)
                 .background(message.mine ? Palette.mine : Palette.troll)
                 .clipShape(RoundedRectangle(cornerRadius: Metrics.bubble, style: .continuous))
+                .shadow(color: .black.opacity(0.45), radius: 5, y: 2)
                 .textSelection(.enabled)
             }
             if !message.mine { Spacer(minLength: 44) }
