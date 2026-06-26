@@ -68,6 +68,25 @@ game. Only change the {blanks}.
 > highly detailed, cinematic vertical composition. Avoid: no text, no watermark, no people, no modern
 > objects, not scary, no harsh close-up face, no bright or cluttered foreground, not cartoon. Aspect 9:16.
 
+### Level 4 — The Arbiter, the Last Court (apex — needed now)
+**Character note:** a colossal blindfolded judge of black stone — *Justice itself given form*. Read it as
+**solemn, weighty, impartial — implacable, not cruel.** Not a demon, not a horror idol. The blindfold is
+iconic (impartial justice) and must stay. Because it's blindfolded there are **no glowing eyes** — the
+focal glow is the **balance-scales**, which is also what I animate (a slow, solemn *pulse* of the scales'
+light rather than a blink).
+> A vast, silent hall of judgment carved from black basalt at night. Colossal black stone pillars and a
+> towering judicial throne frame the upper third; seated upon it, recessed in shadow, a colossal
+> blindfolded figure of Justice carved from black stone holds a great balance-scale level in one massive
+> hand — the scale's two pans glowing softly with warm pale-gold light, the focal point. A single cold
+> shaft of moonlight falls from a high broken oculus above. The lower two-thirds is open and quiet: a vast
+> empty polished basalt floor with faint mirror reflections, worn petitioner's steps, drifting dust and
+> thin mist, dark and still. Style: painterly storybook matte painting, classical romantic oil-painting
+> feel, volumetric fog, moonlit nocturne, moody chiaroscuro, muted earthy palette (black basalt, charcoal,
+> cold slate grey) with warm amber-gold key light from the scales, dreamlike, highly detailed, cinematic
+> vertical composition. Avoid: no text, no watermark, no people, no modern objects, not scary, not
+> menacing, no demonic or horror idol, no glowing eyes, no harsh close-up face, no bright or cluttered
+> foreground, not flat, not cartoon. Aspect 9:16.
+
 ---
 
 ## Handing it off

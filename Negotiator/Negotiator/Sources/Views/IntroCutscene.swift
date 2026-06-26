@@ -55,6 +55,8 @@ struct IntroCutscene: View {
                 if art.anim == "flicker" {
                     await flickerBurst()
                     try? await Task.sleep(for: .seconds(Double.random(in: 1.6...3.8)))
+                } else if art.anim == "pulse" {
+                    await pulse()           // continuous; the scale-light breathes, no gap between beats
                 } else {
                     await blink()
                     if Bool.random() {                              // occasional natural double-blink
@@ -71,6 +73,15 @@ struct IntroCutscene: View {
         try? await Task.sleep(for: .milliseconds(95))
         withAnimation(.easeOut(duration: 0.14)) { closed = false }
         try? await Task.sleep(for: .milliseconds(140))
+    }
+    // The scales of justice: a slow, solemn breathing of the scale-light — a long ease in to the
+    // dimmed frame and back, like a steady heartbeat. Never fully dark (the dim frame only halves
+    // the glow), so it reads as breathing, not blinking.
+    private func pulse() async {
+        withAnimation(.easeInOut(duration: 1.9)) { closed = true }
+        try? await Task.sleep(for: .milliseconds(1900))
+        withAnimation(.easeInOut(duration: 2.2)) { closed = false }
+        try? await Task.sleep(for: .milliseconds(2200))
     }
     // A guttering lamp: a quick irregular burst of on/off, sometimes a longer near-death dim.
     private func flickerBurst() async {

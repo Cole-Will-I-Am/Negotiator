@@ -118,6 +118,7 @@ let INTRO_ART: [String: IntroArt] = [
     "bartholomew": IntroArt(open: "intro_bridge",    closed: "intro_bridge_closed",    title: "The Mossback Bridge"),
     "seraphine":   IntroArt(open: "intro_seraphine", closed: "intro_seraphine_closed", title: "The Star-Gate"),
     "maren":       IntroArt(open: "intro_maren",     closed: "intro_maren_off",        title: "The Drowned Light", anim: "flicker"),
+    "arbiter":     IntroArt(open: "intro_arbiter",   closed: "intro_arbiter_dim",      title: "The Last Court",    anim: "pulse"),
 ]
 
 let LEVEL_CHOICES: [LevelChoice] = [
