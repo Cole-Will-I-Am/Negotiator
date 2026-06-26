@@ -50,10 +50,14 @@ struct CutsceneView: View {
             VideoPlayerHost(url: url, onEnd: finish).ignoresSafeArea()
                 .onAppear { finishAfter(14) }            // safety cap (real clips ~5-9s)
         } else if cutscene == .intro {
-            ProceduralCutscene(onEnd: finish).ignoresSafeArea()
-                .onAppear { finishAfter(10.5) }          // safety > the scene's 8.5s self-end
+            if UIImage(named: "intro_bridge") != nil {
+                IntroCutscene().onAppear { finishAfter(8.5) }     // painted-still cinemagraph (blinking eyes)
+            } else {
+                ProceduralCutscene(onEnd: finish).ignoresSafeArea()
+                    .onAppear { finishAfter(10.5) }               // SpriteKit fallback
+            }
         } else {
-            GoldBloom().onAppear { finishAfter(1.5) }     // win, no asset
+            GoldBloom().onAppear { finishAfter(1.5) }             // win, no asset
         }
     }
 
