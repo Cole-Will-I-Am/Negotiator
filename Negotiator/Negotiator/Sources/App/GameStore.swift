@@ -42,8 +42,14 @@ final class GameStore: ObservableObject {
     }
 
     func bootstrap() {
-        screen = local.hasOnboarded ? .home : .onboarding
+        let next: Screen = local.hasOnboarded ? .home : .onboarding
         Task { await ensureAccount() }
+        // Hold the launch splash (LoadingView's all-gates painting) on screen for a deliberate
+        // beat — otherwise bootstrap flips straight off .loading and the painting is never seen.
+        Task {
+            try? await Task.sleep(for: .seconds(1.6))
+            withAnimation(.easeInOut(duration: 0.5)) { screen = next }
+        }
     }
 
     func finishOnboarding() {

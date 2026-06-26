@@ -32,7 +32,4 @@
             <point key="canvasLocation" x="53" y="375"/>
         </scene>
     </scenes>
-    <resources>
-        <image name="launch_hero" width="941" height="1672"/>
-    </resources>
 </document>
