@@ -26,11 +26,16 @@ struct ConversationView: View {
     // darkens top (header) and bottom (composer) for legibility while the art shows mid-screen.
     private var chatBackground: some View {
         ZStack {
-            Image("chat_bg_bartholomew").resizable().scaledToFill()
-            LinearGradient(
-                colors: [Palette.ink.opacity(0.70), Palette.ink.opacity(0.34),
-                         Palette.ink.opacity(0.42), Palette.ink.opacity(0.88)],
-                startPoint: .top, endPoint: .bottom)
+            if let id = store.level?.id, UIImage(named: "chat_bg_\(id)") != nil {
+                Image("chat_bg_\(id)").resizable().scaledToFill()
+                LinearGradient(
+                    colors: [Palette.ink.opacity(0.70), Palette.ink.opacity(0.34),
+                             Palette.ink.opacity(0.42), Palette.ink.opacity(0.88)],
+                    startPoint: .top, endPoint: .bottom)
+            } else {
+                // No bundled art for this level yet — a clean dark gradient (still readable).
+                LinearGradient(colors: [Palette.troll, Palette.ink], startPoint: .top, endPoint: .bottom)
+            }
         }
         .ignoresSafeArea()
     }
@@ -80,7 +85,7 @@ struct ConversationView: View {
             ScrollView {
                 LazyVStack(spacing: Metrics.s3) {
                     ForEach(store.messages) { msg in
-                        Bubble(message: msg).id(msg.id)
+                        Bubble(message: msg, gatekeeper: store.level?.gatekeeper ?? "Gatekeeper").id(msg.id)
                     }
                     if store.won { winBanner.id("win") }
                     Color.clear.frame(height: 1).id("bottom")
@@ -124,7 +129,7 @@ struct ConversationView: View {
                     .padding(.horizontal, Metrics.s4).padding(.top, 6)
             }
             HStack(alignment: .bottom, spacing: Metrics.s2) {
-                TextField(store.won ? "The gate is open." : "Say something to the troll\u{2026}",
+                TextField(store.won ? "The gate is open." : "Say something to \(store.level?.gatekeeper ?? "them")\u{2026}",
                           text: $draft, axis: .vertical)
                     .font(Type.chat).lineLimit(1...5)
                     .foregroundStyle(Palette.trollText)
@@ -160,6 +165,7 @@ struct ConversationView: View {
 
 private struct Bubble: View {
     let message: ChatMessage
+    var gatekeeper: String = "Gatekeeper"
     private var isTyping: Bool { !message.mine && message.streaming && message.text.isEmpty }
 
     // Render the gatekeeper's narration with inline markdown (*italic*, **bold**) while preserving
@@ -174,7 +180,7 @@ private struct Bubble: View {
             if message.mine { Spacer(minLength: 44) }
             VStack(alignment: message.mine ? .trailing : .leading, spacing: 3) {
                 if !message.mine {
-                    Text("Bartholomew").font(Type.label).foregroundStyle(Palette.amber)
+                    Text(gatekeeper).font(Type.label).foregroundStyle(Palette.amber)
                         .padding(.leading, 4)
                 }
                 Group {

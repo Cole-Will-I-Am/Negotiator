@@ -5,16 +5,17 @@ struct DebriefView: View {
 
     private var seamTitle: String {
         switch store.seam {
-        case "rapport":  return "The Lonely Troll"
-        case "loophole": return "The Literal Oath"
-        default:         return "The Crossing"
+        case "rapport":  return "Won Over"
+        case "loophole": return "Out-Foxed"
+        default:         return "The Gate Opens"
         }
     }
     private var seamText: String {
+        let who = store.level?.gatekeeper ?? "the gatekeeper"
         switch store.seam {
-        case "rapport":  return "You befriended him. Three hundred years of loneliness did what no threat ever could."
-        case "loophole": return "You out-lawyered his oath. He kept it to the letter \u{2014} and lost the word anyway."
-        default:         return "You found your way across the Mossback Bridge."
+        case "rapport":  return "You won \(who) over \u{2014} the one thing no threat or bribe could ever buy."
+        case "loophole": return "You turned \(who)\u{2019}s own rules against them, and walked away with the prize."
+        default:         return "You talked your way through."
         }
     }
 

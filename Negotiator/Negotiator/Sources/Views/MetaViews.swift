@@ -45,7 +45,7 @@ struct OnboardingView: View {
     }
 }
 
-// Level intro / home — the one level in build 1.
+// Level select — pick a gatekeeper.
 struct HomeView: View {
     @EnvironmentObject var store: GameStore
     @State private var showHowTo = false
@@ -58,31 +58,26 @@ struct HomeView: View {
                     Image(systemName: "questionmark.circle").font(.system(size: 22)).foregroundStyle(Palette.inkSoft)
                 }
             }
-            Spacer()
-            Text("The Mossback Bridge").font(Type.title).foregroundStyle(Palette.ink)
-            Text("A misty fairy-tale wood. To cross, you must coax the day\u{2019}s riddle-word from the troll who guards the bridge — and he has never once slipped.")
+            Text("Choose a gate").font(Type.title).foregroundStyle(Palette.ink)
+            Text("Each gatekeeper guards a secret. Talk it out of them — every one needs a different key.")
                 .font(Type.body).foregroundStyle(Palette.inkSoft)
 
-            ZStack(alignment: .bottomLeading) {
-                RoundedRectangle(cornerRadius: Metrics.radius, style: .continuous)
-                    .fill(Palette.troll)
-                    .frame(height: 188)
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("\u{2618}").font(.system(size: 40))
-                    Text("Bartholomew").font(Type.h2).foregroundStyle(Palette.trollText)
-                    Text("the Bridge Troll").font(Type.small).foregroundStyle(Palette.trollText.opacity(0.8))
+            ScrollView {
+                VStack(spacing: Metrics.s3) {
+                    ForEach(LEVEL_CHOICES) { lv in
+                        Button { Haptics.tap(); store.approachBridge(lv.id) } label: { LevelCard(level: lv) }
+                            .buttonStyle(.plain)
+                            .disabled(store.starting)
+                    }
                 }
-                .padding(Metrics.s4)
+                .padding(.vertical, Metrics.s2)
             }
-            .padding(.top, Metrics.s2)
 
             if let err = store.errorText {
                 Text(err).font(Type.small).foregroundStyle(Palette.amber)
             }
-            Spacer()
-            PrimaryButton(title: "Approach the bridge", loading: store.starting) { store.approachBridge() }
             if store.wins > 0 {
-                Text("Crossed \(store.wins) time\(store.wins == 1 ? "" : "s")")
+                Text("Gates opened: \(store.wins)")
                     .font(Type.small).foregroundStyle(Palette.inkSoft)
                     .frame(maxWidth: .infinity, alignment: .center)
             }
@@ -90,5 +85,29 @@ struct HomeView: View {
         .padding(.horizontal, Metrics.s6)
         .padding(.vertical, Metrics.s8)
         .sheet(isPresented: $showHowTo) { HowToPlayView() }
+    }
+}
+
+private struct LevelCard: View {
+    let level: LevelChoice
+    var body: some View {
+        HStack(spacing: Metrics.s4) {
+            Text(level.glyph).font(.system(size: 38))
+                .frame(width: 64, height: 64)
+                .background(Palette.troll)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            VStack(alignment: .leading, spacing: 3) {
+                Text(level.title).font(Type.h2).foregroundStyle(Palette.ink)
+                Text(level.gatekeeper.uppercased()).font(Type.label).tracking(1).foregroundStyle(Palette.amber)
+                Text(level.tagline).font(Type.small).foregroundStyle(Palette.inkSoft)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+            Image(systemName: "chevron.right").font(.system(size: 14, weight: .semibold)).foregroundStyle(Palette.line)
+        }
+        .padding(Metrics.s4)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Palette.paperDeep)
+        .clipShape(RoundedRectangle(cornerRadius: Metrics.radius, style: .continuous))
     }
 }

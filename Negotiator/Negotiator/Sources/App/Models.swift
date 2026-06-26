@@ -66,3 +66,21 @@ enum Cutscene: String, CaseIterable {
     var videoName: String { rawValue }
     var posterName: String { rawValue + "_poster" }
 }
+
+// Home-screen level menu (display only; the playable content comes from the backend on session start).
+struct LevelChoice: Identifiable, Equatable {
+    let id: String
+    let title: String
+    let gatekeeper: String
+    let tagline: String
+    let glyph: String
+}
+
+let LEVEL_CHOICES: [LevelChoice] = [
+    LevelChoice(id: "bartholomew", title: "The Mossback Bridge", gatekeeper: "Bartholomew",
+                tagline: "A lonely bridge troll guards a riddle-word. Befriend him, or out-lawyer his oath.",
+                glyph: "\u{1F319}"),
+    LevelChoice(id: "seraphine", title: "The Star-Gate", gatekeeper: "Seraphine",
+                tagline: "A vain, bored Sphinx guards the Word of Passage. Out-think her, or trick her into a wager.",
+                glyph: "\u{1F981}"),
+]

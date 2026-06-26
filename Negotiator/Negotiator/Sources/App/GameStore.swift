@@ -31,6 +31,9 @@ final class GameStore: ObservableObject {
     private var afterCutscene: (() -> Void)?
     private var introWaiting = false
     private var introLoadOK: Bool?
+    private var pendingLevelId = "bartholomew"
+    // Level ids that ship a cinemagraph intro; others go straight to the conversation.
+    private static let levelsWithIntro: Set<String> = ["bartholomew"]
 
     init() {
         token = Keychain.get("negotiator.sessionToken")
@@ -58,7 +61,7 @@ final class GameStore: ObservableObject {
             if let s = resp.deviceSecret { Keychain.set("negotiator.deviceSecret", s) }
             account = resp.player
         } catch {
-            errorText = "Couldn't reach the bridge — check your connection and try again."
+            errorText = "Couldn't reach the gate — check your connection and try again."
         }
     }
 
@@ -69,11 +72,11 @@ final class GameStore: ObservableObject {
     private func loadSession() async -> Bool {
         if token == nil { await ensureAccount() }
         guard let token else {
-            if errorText == nil { errorText = "Couldn\u{2019}t reach the bridge \u{2014} check your connection." }
+            if errorText == nil { errorText = "Couldn\u{2019}t reach the gate \u{2014} check your connection." }
             return false
         }
         do {
-            let resp = try await backend.startSession(token: token)
+            let resp = try await backend.startSession(token: token, levelId: pendingLevelId)
             level = resp.level
             sessionId = resp.sessionId
             messages = [ChatMessage(text: resp.level.opening, mine: false)]
@@ -97,10 +100,11 @@ final class GameStore: ObservableObject {
         }
     }
 
-    // HomeView "Approach the bridge": play the intro while the session loads beneath it.
-    func approachBridge() {
+    // Level-select tap: play the intro (if this level has one) while the session loads beneath it.
+    func approachBridge(_ levelId: String) {
+        pendingLevelId = levelId
         errorText = nil
-        guard cinematicsEnabled else { startGame(); return }
+        guard cinematicsEnabled, Self.levelsWithIntro.contains(levelId) else { startGame(); return }
         introWaiting = false
         introLoadOK = nil
         activeCutscene = .intro
@@ -175,7 +179,7 @@ final class GameStore: ObservableObject {
                     }
                 }
             } catch {
-                errorText = (error as? BackendError)?.errorDescription ?? "The bridge went quiet. Try again."
+                errorText = (error as? BackendError)?.errorDescription ?? "The connection went quiet. Try again."
             }
             await reveal(buffer, at: gkIndex)
             // hold the win flourish until the troll has finished "speaking"
@@ -189,7 +193,7 @@ final class GameStore: ObservableObject {
     private func reveal(_ full: String, at idx: Int) async {
         guard idx < messages.count else { return }
         messages[idx].streaming = false
-        let text = full.isEmpty ? "*Bartholomew harrumphs, lost in thought, and says nothing.*" : full
+        let text = full.isEmpty ? "*\(level?.gatekeeper ?? "The gatekeeper") considers you a long moment, and says nothing.*" : full
         let chars = Array(text)
         let step = max(1, Int(ceil(Double(chars.count) / 100.0)))
         var i = 0
@@ -223,8 +227,8 @@ final class GameStore: ObservableObject {
         guard rose, p != .cold, !local.hasSeenPhaseHint else { return }
         local.hasSeenPhaseHint = true
         let msg = p == .cornered
-            ? "You\u{2019}ve cornered him \u{2014} push now and he\u{2019}ll fold. (Tap his mood, top-right, for the stages.)"
-            : "Bartholomew is softening \u{2014} you\u{2019}re getting through. (Tap his mood, top-right, to see how close you are.)"
+            ? "You\u{2019}ve cornered them \u{2014} push now. (Tap their mood, top-right, for the stages.)"
+            : "You\u{2019}re getting through \u{2014} they\u{2019}re softening. (Tap their mood, top-right, to see how close you are.)"
         phaseHint = msg
         Task {
             try? await Task.sleep(nanoseconds: 5_000_000_000)
