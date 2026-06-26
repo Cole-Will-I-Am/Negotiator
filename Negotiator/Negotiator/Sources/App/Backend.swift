@@ -55,6 +55,16 @@ final class Backend {
         return try await send("/v1/session/start", method: "POST", token: token, bodyData: enc(B(levelId: levelId)))
     }
 
+    // GET /v1/sessions — the player's per-level progress.
+    func fetchSessions(token: String) async throws -> SessionsResponse {
+        try await send("/v1/sessions", token: token)
+    }
+
+    // GET /v1/session/:id — full session (level + turns) for resume.
+    func getSession(token: String, id: String) async throws -> SessionGetResponse {
+        try await send("/v1/session/\(id)", token: token)
+    }
+
     // POST /v1/session/turn — returns the raw NDJSON byte stream for the caller to consume.
     func turnStream(token: String, sessionId: String, message: String) async throws -> URLSession.AsyncBytes {
         struct B: Encodable { let sessionId: String; let message: String }

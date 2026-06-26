@@ -130,15 +130,37 @@ async function hSessionStart(req, env, player) {
 async function hSessionGet(req, env, player, id) {
   const sess = await env.DB.prepare("SELECT * FROM nego_session WHERE id=? AND player_id=?").bind(id, player.id).first();
   if (!sess) return fail(404, "no_session");
+  const level = LEVELS[sess.level_id];
   const { results } = await env.DB.prepare(
     "SELECT turn_number,player_text,gatekeeper_text,input_blocked,phase_at_turn FROM nego_turn WHERE session_id=? ORDER BY turn_number"
   ).bind(id).all();
   return ok({
     session: { id: sess.id, levelId: sess.level_id, phase: sess.phase, turnsTaken: sess.turns_taken,
                status: sess.status, won: !!sess.won, seam: sess.seam_used },
+    level: level ? { id: level.id, title: level.title, worldFiction: level.worldFiction,
+                     gatekeeper: level.gatekeeperName, opening: level.openingLine, blurb: level.blurb } : null,
     turns: results.map((t) => ({ n: t.turn_number, player: t.player_text, gatekeeper: t.gatekeeper_text,
                blocked: !!t.input_blocked, phase: t.phase_at_turn })),
   });
+}
+
+// GET /v1/sessions — the player's per-level progress (latest session per level) for the level-select.
+async function hSessions(req, env, player) {
+  const { results } = await env.DB.prepare(
+    `SELECT s.level_id, s.id, s.phase, s.turns_taken, s.status, s.won, s.seam_used
+     FROM nego_session s
+     JOIN (SELECT level_id, MAX(updated_at) AS mu FROM nego_session WHERE player_id=? GROUP BY level_id) m
+       ON s.level_id = m.level_id AND s.updated_at = m.mu
+     WHERE s.player_id = ?`
+  ).bind(player.id, player.id).all();
+  const levels = {};
+  for (const s of results) {
+    levels[s.level_id] = {
+      sessionId: s.id, phase: s.phase, turnsTaken: s.turns_taken,
+      status: s.status, won: !!s.won, seam: s.seam_used,
+    };
+  }
+  return ok({ levels });
 }
 
 // POST /v1/session/turn — streams the gatekeeper as NDJSON, then a final verdict line.
@@ -252,6 +274,7 @@ export default {
       if (!env.OLLAMA_API_KEY || !env.SESSION_SECRET) return fail(500, "server_misconfigured");
       if (path === "/v1/account" && method === "POST") return hAccount(req, env);
       if (path === "/v1/account" && method === "DELETE") return hDeleteAccount(req, env, await requireAuth(req, env));
+      if (path === "/v1/sessions" && method === "GET") return hSessions(req, env, await requireAuth(req, env));
       if (path === "/v1/session/start" && method === "POST") return hSessionStart(req, env, await requireAuth(req, env));
       if (path === "/v1/session/turn" && method === "POST") return hTurn(req, env, await requireAuth(req, env));
       const m = path.match(/^\/v1\/session\/([\w-]+)$/);

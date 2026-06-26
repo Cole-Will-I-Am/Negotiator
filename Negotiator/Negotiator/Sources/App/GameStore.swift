@@ -13,6 +13,7 @@ final class GameStore: ObservableObject {
         didSet { local.cinematicsEnabled = cinematicsEnabled }
     }
     @Published private(set) var account: PlayerView?
+    @Published private(set) var progress: [String: LevelProgress] = [:]
     @Published private(set) var level: LevelInfo?
     @Published var messages: [ChatMessage] = []
     @Published private(set) var gkPhase: Phase = .cold
@@ -59,6 +60,7 @@ final class GameStore: ObservableObject {
             Keychain.set("negotiator.sessionToken", resp.token)
             if let s = resp.deviceSecret { Keychain.set("negotiator.deviceSecret", s) }
             account = resp.player
+            loadProgress()
         } catch {
             errorText = "Couldn't reach the gate — check your connection and try again."
         }
@@ -142,6 +144,54 @@ final class GameStore: ObservableObject {
         introWaiting = false
         introLoadOK = nil
         screen = ok ? .conversation : .home
+    }
+
+    // ---- progress + resume ----
+    func loadProgress() {
+        guard let token else { return }
+        Task {
+            if let resp = try? await backend.fetchSessions(token: token) { progress = resp.levels }
+        }
+    }
+
+    // Level-select tap: resume an in-progress session, else start fresh (with the intro).
+    func openLevel(_ levelId: String) {
+        if let p = progress[levelId], p.status == "active", !p.won, p.turnsTaken >= 1 {
+            resume(levelId, sessionId: p.sessionId)
+        } else {
+            approachBridge(levelId)
+        }
+    }
+
+    // Reconstruct an in-progress conversation from the server and drop straight into it (no intro).
+    private func resume(_ levelId: String, sessionId sid: String) {
+        guard !starting, let token else { return }
+        pendingLevelId = levelId
+        starting = true
+        errorText = nil
+        Task {
+            do {
+                let resp = try await backend.getSession(token: token, id: sid)
+                level = resp.level
+                sessionId = resp.session.id
+                var msgs: [ChatMessage] = []
+                if let opening = resp.level?.opening { msgs.append(ChatMessage(text: opening, mine: false)) }
+                for t in resp.turns {
+                    msgs.append(ChatMessage(text: t.player, mine: true))
+                    msgs.append(ChatMessage(text: t.gatekeeper, mine: false))
+                }
+                messages = msgs
+                gkPhase = Phase(rawValue: resp.session.phase) ?? .cold
+                won = resp.session.won
+                seam = resp.session.seam
+                turnsTaken = resp.session.turnsTaken
+                phaseHint = nil
+                screen = .conversation
+            } catch {
+                errorText = (error as? BackendError)?.errorDescription ?? "Couldn\u{2019}t resume \u{2014} try again."
+            }
+            starting = false
+        }
     }
 
     // ---- one player turn ----

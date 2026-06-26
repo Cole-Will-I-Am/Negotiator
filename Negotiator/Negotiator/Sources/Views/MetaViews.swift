@@ -65,9 +65,11 @@ struct HomeView: View {
             ScrollView {
                 VStack(spacing: Metrics.s3) {
                     ForEach(LEVEL_CHOICES) { lv in
-                        Button { Haptics.tap(); store.approachBridge(lv.id) } label: { LevelCard(level: lv) }
-                            .buttonStyle(.plain)
-                            .disabled(store.starting)
+                        Button { Haptics.tap(); store.openLevel(lv.id) } label: {
+                            LevelCard(level: lv, progress: store.progress[lv.id])
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(store.starting)
                     }
                 }
                 .padding(.vertical, Metrics.s2)
@@ -85,11 +87,17 @@ struct HomeView: View {
         .padding(.horizontal, Metrics.s6)
         .padding(.vertical, Metrics.s8)
         .sheet(isPresented: $showHowTo) { HowToPlayView() }
+        .task { store.loadProgress() }
     }
 }
 
 private struct LevelCard: View {
     let level: LevelChoice
+    var progress: LevelProgress? = nil
+    private var resumable: Bool {
+        guard let p = progress else { return false }
+        return p.status == "active" && !p.won && p.turnsTaken >= 1
+    }
     var body: some View {
         HStack(spacing: Metrics.s4) {
             Text(level.glyph).font(.system(size: 38))
@@ -101,13 +109,32 @@ private struct LevelCard: View {
                 Text(level.gatekeeper.uppercased()).font(Type.label).tracking(1).foregroundStyle(Palette.amber)
                 Text(level.tagline).font(Type.small).foregroundStyle(Palette.inkSoft)
                     .fixedSize(horizontal: false, vertical: true)
+                progressBadge.padding(.top, 2)
             }
             Spacer(minLength: 0)
-            Image(systemName: "chevron.right").font(.system(size: 14, weight: .semibold)).foregroundStyle(Palette.line)
+            Image(systemName: resumable ? "arrow.right.circle.fill" : "chevron.right")
+                .font(.system(size: resumable ? 20 : 14, weight: .semibold))
+                .foregroundStyle(resumable ? Palette.gold : Palette.line)
         }
         .padding(Metrics.s4)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Palette.paperDeep)
         .clipShape(RoundedRectangle(cornerRadius: Metrics.radius, style: .continuous))
+    }
+
+    @ViewBuilder private var progressBadge: some View {
+        if let p = progress {
+            if p.won {
+                Label("Solved", systemImage: "checkmark.seal.fill")
+                    .font(Type.label).foregroundStyle(Palette.gold)
+            } else if p.status == "active" && p.turnsTaken >= 1 {
+                let ph = Phase(rawValue: p.phase) ?? .cold
+                HStack(spacing: 5) {
+                    Circle().fill(Palette.phaseTint(ph)).frame(width: 7, height: 7)
+                    Text("In progress \u{00B7} \(Palette.phaseLabel(ph))")
+                        .font(Type.label).foregroundStyle(Palette.inkSoft)
+                }
+            }
+        }
     }
 }

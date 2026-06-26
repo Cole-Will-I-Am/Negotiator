@@ -30,6 +30,39 @@ struct SessionStartResponse: Codable {
     let level: LevelInfo
 }
 
+// ---- progress + resume ----
+struct LevelProgress: Codable, Equatable {
+    let sessionId: String
+    let phase: String
+    let turnsTaken: Int
+    let status: String
+    let won: Bool
+    let seam: String?
+}
+struct SessionsResponse: Codable { let levels: [String: LevelProgress] }
+
+struct SessionInfo: Codable {
+    let id: String
+    let levelId: String
+    let phase: String
+    let turnsTaken: Int
+    let status: String
+    let won: Bool
+    let seam: String?
+}
+struct TurnRecord: Codable {
+    let n: Int
+    let player: String
+    let gatekeeper: String
+    let blocked: Bool
+    let phase: String
+}
+struct SessionGetResponse: Codable {
+    let session: SessionInfo
+    let level: LevelInfo?
+    let turns: [TurnRecord]
+}
+
 // ---- streaming turn protocol (one JSON object per NDJSON line) ----
 //   {"t":"phase","from":"cold","to":"warm"}
 //   {"t":"delta","c":"…"}
