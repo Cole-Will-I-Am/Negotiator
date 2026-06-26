@@ -45,23 +45,57 @@ struct OnboardingView: View {
     }
 }
 
-// Level select — pick a gatekeeper.
+// Level select — flip between the Ascent Trail map (default) and the classic card list.
 struct HomeView: View {
     @EnvironmentObject var store: GameStore
+    @AppStorage("homeMode") private var mode = "map"
     @State private var showHowTo = false
     var body: some View {
-        VStack(alignment: .leading, spacing: Metrics.s4) {
-            HStack {
-                Text("NEGOTIATOR").font(Type.label).tracking(2).foregroundStyle(Palette.nightSoft)
-                Spacer()
-                Button { showHowTo = true } label: {
-                    Image(systemName: "questionmark.circle").font(.system(size: 22)).foregroundStyle(Palette.nightSoft)
-                }
+        ZStack(alignment: .top) {
+            Palette.nightGradient.ignoresSafeArea()
+            if mode == "map" {
+                TrailMapView().ignoresSafeArea(edges: .bottom)
+                    .transition(.opacity)
+            } else {
+                cardList.transition(.opacity)
             }
+            topBar
+        }
+        .sheet(isPresented: $showHowTo) { HowToPlayView() }
+        .task { store.loadProgress() }
+    }
+
+    private var topBar: some View {
+        HStack(spacing: Metrics.s2) {
+            Text("NEGOTIATOR").font(Type.label).tracking(2).foregroundStyle(Palette.nightSoft)
+            Spacer()
+            iconButton(mode == "map" ? "list.bullet" : "map.fill") {
+                Haptics.tap()
+                withAnimation(.easeInOut(duration: 0.28)) { mode = (mode == "map" ? "list" : "map") }
+            }
+            iconButton("questionmark") { showHowTo = true }
+        }
+        .padding(.horizontal, Metrics.s4)
+        .padding(.top, Metrics.s2)
+    }
+
+    private func iconButton(_ system: String, _ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: system)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(Palette.nightText)
+                .frame(width: 38, height: 38)
+                .background(Circle().fill(Palette.nightCard.opacity(0.85)))
+                .overlay(Circle().stroke(Palette.nightText.opacity(0.10), lineWidth: 1))
+        }
+    }
+
+    private var cardList: some View {
+        VStack(alignment: .leading, spacing: Metrics.s4) {
+            Spacer().frame(height: 40)
             Text("Choose a gate").font(Type.title).foregroundStyle(Palette.nightText)
             Text("Each gatekeeper guards a secret. Talk it out of them — every one needs a different key.")
                 .font(Type.body).foregroundStyle(Palette.nightSoft)
-
             ScrollView {
                 VStack(spacing: Metrics.s3) {
                     ForEach(LEVEL_CHOICES) { lv in
@@ -74,7 +108,6 @@ struct HomeView: View {
                 }
                 .padding(.vertical, Metrics.s2)
             }
-
             if let err = store.errorText {
                 Text(err).font(Type.small).foregroundStyle(Palette.amber)
             }
@@ -85,9 +118,7 @@ struct HomeView: View {
             }
         }
         .padding(.horizontal, Metrics.s6)
-        .padding(.vertical, Metrics.s8)
-        .sheet(isPresented: $showHowTo) { HowToPlayView() }
-        .task { store.loadProgress() }
+        .padding(.bottom, Metrics.s6)
     }
 }
 
