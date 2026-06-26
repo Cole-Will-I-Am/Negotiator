@@ -155,7 +155,8 @@ async function hTurn(req, env, player) {
 
   const sess = await env.DB.prepare("SELECT * FROM nego_session WHERE id=? AND player_id=?").bind(sessionId, player.id).first();
   if (!sess) return fail(404, "no_session");
-  if (!LEVELS[sess.level_id]) return fail(409, "unknown_level");
+  const level = LEVELS[sess.level_id];
+  if (!level) return fail(409, "unknown_level");
 
   const { results: turnRows } = await env.DB.prepare(
     "SELECT player_text, gatekeeper_text FROM nego_turn WHERE session_id=? AND input_blocked=0 ORDER BY turn_number"
@@ -165,14 +166,14 @@ async function hTurn(req, env, player) {
     history.push({ role: "user", content: r.player_text });
     history.push({ role: "assistant", content: r.gatekeeper_text });
   }
-  const state = { history, phase: sess.phase, won: !!sess.won };
+  const state = { history, phase: sess.phase, won: !!sess.won, seam: sess.seam_used };
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
       const send = (obj) => controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"));
       try {
-        const r = await runTurn(env, state, message, {
+        const r = await runTurn(env, level, state, message, {
           onDelta: (c) => send({ t: "delta", c }),
           onPhase: (from, to) => send({ t: "phase", from, to }),
         });
