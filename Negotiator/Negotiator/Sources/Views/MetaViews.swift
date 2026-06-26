@@ -100,11 +100,21 @@ private struct LevelCard: View {
     }
     var body: some View {
         HStack(spacing: Metrics.s4) {
-            Image(level.thumb)
-                .resizable().scaledToFill()
-                .frame(width: 64, height: 64)
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Palette.line, lineWidth: 1))
+            Group {
+                if UIImage(named: level.thumb) != nil {
+                    Image(level.thumb).resizable().scaledToFill()
+                } else {
+                    // No portrait yet — a tasteful initial placeholder.
+                    ZStack {
+                        Palette.troll
+                        Text(String(level.gatekeeper.prefix(1)))
+                            .font(Type.serif(28, .bold)).foregroundStyle(Palette.trollText)
+                    }
+                }
+            }
+            .frame(width: 64, height: 64)
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Palette.line, lineWidth: 1))
             VStack(alignment: .leading, spacing: 3) {
                 Text(level.title).font(Type.h2).foregroundStyle(Palette.ink)
                 HStack(spacing: 6) {

@@ -126,4 +126,7 @@ let LEVEL_CHOICES: [LevelChoice] = [
     LevelChoice(id: "seraphine", title: "The Star-Gate", gatekeeper: "Seraphine",
                 tagline: "A vain, bored Sphinx guards the Word of Passage. Out-think her, or trick her into a wager.",
                 thumb: "thumb_seraphine", difficulty: 2, difficultyWord: "Testing"),
+    LevelChoice(id: "maren", title: "The Drowned Light", gatekeeper: "Maren",
+                tagline: "A lighthouse-keeper's ghost guards a name in the fog. Grieve with her truly, or remember a bound spirit cannot lie.",
+                thumb: "thumb_maren", difficulty: 3, difficultyWord: "Haunting"),
 ]
