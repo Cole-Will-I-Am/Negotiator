@@ -6,6 +6,8 @@ struct ConversationView: View {
     @State private var showHowTo = false
     @State private var showPhaseInfo = false
     @FocusState private var inputFocused: Bool
+    @StateObject private var dictator = SpeechDictator()
+    @State private var dictationBase = ""
 
     var body: some View {
         VStack(spacing: 0) {
@@ -20,6 +22,8 @@ struct ConversationView: View {
         .sheet(isPresented: $showHowTo) { HowToPlayView() }
         .onChange(of: store.gkPhase) { _, _ in Haptics.soften() }
         .onChange(of: store.won) { _, won in if won { Haptics.win() } }
+        .onChange(of: store.won) { _, won in if won { dictator.stop() } }
+        .onDisappear { dictator.stop() }
     }
 
     // Level-1 atmosphere: the painted Mossback Bridge behind the conversation, with a scrim that
@@ -123,12 +127,18 @@ struct ConversationView: View {
 
     private var composer: some View {
         VStack(spacing: 0) {
-            if let err = store.errorText {
+            if dictator.isRecording {
+                Label("Listening\u{2026} tap the mic to stop", systemImage: "waveform")
+                    .font(Type.small).foregroundStyle(Palette.gold)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, Metrics.s4).padding(.top, 6)
+            } else if let err = dictator.errorText ?? store.errorText {
                 Text(err).font(Type.small).foregroundStyle(Palette.amber)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, Metrics.s4).padding(.top, 6)
             }
             HStack(alignment: .bottom, spacing: Metrics.s2) {
+                micButton
                 TextField(store.won ? "The gate is open." : "Say something to \(store.level?.gatekeeper ?? "them")\u{2026}",
                           text: $draft, axis: .vertical)
                     .font(Type.chat).lineLimit(1...5)
@@ -153,10 +163,36 @@ struct ConversationView: View {
         .background(Palette.ink.opacity(0.6))
     }
 
+    // Tap to dictate: live transcript fills the draft (appended after anything already typed);
+    // tap again to stop. Hidden if the device can't do speech recognition.
+    @ViewBuilder private var micButton: some View {
+        if dictator.isSupported {
+            Button {
+                Haptics.tap()
+                if dictator.isRecording {
+                    dictator.stop()
+                } else {
+                    inputFocused = false
+                    let trimmed = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+                    dictationBase = trimmed.isEmpty ? "" : draft + " "
+                    dictator.start { recognized in draft = dictationBase + recognized }
+                }
+            } label: {
+                Image(systemName: dictator.isRecording ? "mic.fill" : "mic")
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundStyle(dictator.isRecording ? Palette.gold : Palette.paper.opacity(0.7))
+                    .symbolEffect(.pulse, isActive: dictator.isRecording)
+                    .frame(width: 38, height: 44)
+            }
+            .disabled(store.won || store.sending)
+        }
+    }
+
     private var canSend: Bool {
         !store.won && !store.sending && !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
     private func sendDraft() {
+        dictator.stop()
         let t = draft
         draft = ""
         store.send(t)
