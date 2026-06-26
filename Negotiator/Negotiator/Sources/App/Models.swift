@@ -113,10 +113,11 @@ struct LevelChoice: Identifiable, Equatable {
 
 // Per-level intro cinemagraph art (bundled image + an "eyes-closed" frame for the blink + a title).
 // A level absent from this map simply skips the intro and goes straight to the conversation.
-struct IntroArt: Equatable { let open: String; let closed: String; let title: String }
+struct IntroArt: Equatable { let open: String; let closed: String; let title: String; var anim: String = "blink" }  // anim: "blink" | "flicker"
 let INTRO_ART: [String: IntroArt] = [
     "bartholomew": IntroArt(open: "intro_bridge",    closed: "intro_bridge_closed",    title: "The Mossback Bridge"),
     "seraphine":   IntroArt(open: "intro_seraphine", closed: "intro_seraphine_closed", title: "The Star-Gate"),
+    "maren":       IntroArt(open: "intro_maren",     closed: "intro_maren_off",        title: "The Drowned Light", anim: "flicker"),
 ]
 
 let LEVEL_CHOICES: [LevelChoice] = [

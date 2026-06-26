@@ -43,21 +43,26 @@ struct IntroCutscene: View {
         .onAppear {
             withAnimation(.easeInOut(duration: 8.5)) { zoom = true }
             withAnimation(.easeIn(duration: 1.2).delay(4.8)) { showTitle = true }
-            blinkTask = makeBlinkTask()
+            blinkTask = makeAnimTask()
         }
         .onDisappear { blinkTask?.cancel() }
     }
 
-    private func makeBlinkTask() -> Task<Void, Never> {
+    private func makeAnimTask() -> Task<Void, Never> {
         Task { @MainActor in
-            try? await Task.sleep(for: .seconds(1.6))
+            try? await Task.sleep(for: .seconds(1.2))
             while !Task.isCancelled {
-                await blink()
-                if Bool.random() {                              // occasional natural double-blink
-                    try? await Task.sleep(for: .milliseconds(170))
+                if art.anim == "flicker" {
+                    await flickerBurst()
+                    try? await Task.sleep(for: .seconds(Double.random(in: 1.6...3.8)))
+                } else {
                     await blink()
+                    if Bool.random() {                              // occasional natural double-blink
+                        try? await Task.sleep(for: .milliseconds(170))
+                        await blink()
+                    }
+                    try? await Task.sleep(for: .seconds(Double.random(in: 2.4...4.0)))
                 }
-                try? await Task.sleep(for: .seconds(Double.random(in: 2.4...4.0)))
             }
         }
     }
@@ -66,5 +71,20 @@ struct IntroCutscene: View {
         try? await Task.sleep(for: .milliseconds(95))
         withAnimation(.easeOut(duration: 0.14)) { closed = false }
         try? await Task.sleep(for: .milliseconds(140))
+    }
+    // A guttering lamp: a quick irregular burst of on/off, sometimes a longer near-death dim.
+    private func flickerBurst() async {
+        let n = Int.random(in: 2...6)
+        for _ in 0..<n {
+            withAnimation(.linear(duration: 0.04)) { closed = true }
+            try? await Task.sleep(for: .milliseconds(Int.random(in: 35...110)))
+            withAnimation(.linear(duration: 0.04)) { closed = false }
+            try? await Task.sleep(for: .milliseconds(Int.random(in: 30...95)))
+        }
+        if Bool.random() {
+            withAnimation(.easeOut(duration: 0.12)) { closed = true }
+            try? await Task.sleep(for: .milliseconds(Int.random(in: 180...430)))
+            withAnimation(.easeIn(duration: 0.20)) { closed = false }
+        }
     }
 }
