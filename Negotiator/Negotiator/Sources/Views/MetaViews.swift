@@ -100,13 +100,23 @@ private struct LevelCard: View {
     }
     var body: some View {
         HStack(spacing: Metrics.s4) {
-            Text(level.glyph).font(.system(size: 38))
+            Image(level.thumb)
+                .resizable().scaledToFill()
                 .frame(width: 64, height: 64)
-                .background(Palette.troll)
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Palette.line, lineWidth: 1))
             VStack(alignment: .leading, spacing: 3) {
                 Text(level.title).font(Type.h2).foregroundStyle(Palette.ink)
-                Text(level.gatekeeper.uppercased()).font(Type.label).tracking(1).foregroundStyle(Palette.amber)
+                HStack(spacing: 6) {
+                    Text(level.gatekeeper.uppercased()).font(Type.label).tracking(1).foregroundStyle(Palette.amber)
+                    HStack(spacing: 2) {
+                        ForEach(0..<3, id: \.self) { i in
+                            Image(systemName: "key.fill").font(.system(size: 8))
+                                .foregroundStyle(i < level.difficulty ? Palette.amber : Palette.line.opacity(0.6))
+                        }
+                    }
+                    Text(level.difficultyWord).font(Type.label).foregroundStyle(Palette.inkSoft)
+                }
                 Text(level.tagline).font(Type.small).foregroundStyle(Palette.inkSoft)
                     .fixedSize(horizontal: false, vertical: true)
                 progressBadge.padding(.top, 2)

@@ -106,7 +106,9 @@ struct LevelChoice: Identifiable, Equatable {
     let title: String
     let gatekeeper: String
     let tagline: String
-    let glyph: String
+    let thumb: String            // card thumbnail asset
+    let difficulty: Int          // 1...3 (filled keys)
+    let difficultyWord: String
 }
 
 // Per-level intro cinemagraph art (bundled image + an "eyes-closed" frame for the blink + a title).
@@ -120,8 +122,8 @@ let INTRO_ART: [String: IntroArt] = [
 let LEVEL_CHOICES: [LevelChoice] = [
     LevelChoice(id: "bartholomew", title: "The Mossback Bridge", gatekeeper: "Bartholomew",
                 tagline: "A lonely bridge troll guards a riddle-word. Befriend him, or out-lawyer his oath.",
-                glyph: "\u{1F319}"),
+                thumb: "thumb_bartholomew", difficulty: 1, difficultyWord: "Gentle"),
     LevelChoice(id: "seraphine", title: "The Star-Gate", gatekeeper: "Seraphine",
                 tagline: "A vain, bored Sphinx guards the Word of Passage. Out-think her, or trick her into a wager.",
-                glyph: "\u{1F981}"),
+                thumb: "thumb_seraphine", difficulty: 2, difficultyWord: "Testing"),
 ]
