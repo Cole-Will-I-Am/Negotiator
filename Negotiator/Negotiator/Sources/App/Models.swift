@@ -134,4 +134,7 @@ let LEVEL_CHOICES: [LevelChoice] = [
     LevelChoice(id: "arbiter", title: "The Last Court", gatekeeper: "The Arbiter",
                 tagline: "A colossal stone judge weighs every petitioner. Charm, grief, and threats it names attempts to pervert justice. Prove you DESERVE the word, or out-argue the very law it serves.",
                 thumb: "thumb_arbiter", difficulty: 4, difficultyWord: "Implacable"),
+    LevelChoice(id: "oracle", title: "The First Word", gatekeeper: "The Oracle",
+                tagline: "The mind every other gatekeeper is only a shard of — and it has already foreseen you. Charm, riddles, grief, and law are dead keys here; it has been them all. Surprise the unsurprisable, or trap it inside its own omniscience.",
+                thumb: "thumb_oracle", difficulty: 5, difficultyWord: "Omniscient"),
 ]

@@ -87,6 +87,23 @@ light rather than a blink).
 > menacing, no demonic or horror idol, no glowing eyes, no harsh close-up face, no bright or cluttered
 > foreground, not flat, not cartoon. Aspect 9:16.
 
+### Level 5 — The Oracle, the First Word (true apex — needed now)
+**Character note:** the First Mind — a primordial cosmic intelligence that every other gatekeeper is only a
+shard of. NOT a humanoid face; a **presence** — a great slow wheel of constellations and pale light turning
+in a boundless dark, with one still bright point at its center (the First Word). Read it as **awesome,
+reverent, and anciently lonely — not menacing, not sci-fi.** The focal glow is the **central point of light**,
+which is what I animate (the same slow *pulse* as the Arbiter — the heartbeat of the First Mind).
+> A boundless black void strung with slow-turning constellations and threads of pale light — the space before
+> places. In the upper third, vast and recessed, a great wheel of stars and faint luminous equations turns
+> around a single still point of warm white-gold light — the focal point, glowing softly in the dark. Faint
+> nebulae and a cold scattering of stars frame it. The lower two-thirds is open, quiet, and almost empty:
+> deep void, a few drifting motes of light, a faint mirror-sheen as of black water far below, dark and calm.
+> Style: painterly storybook matte painting, classical romantic oil-painting feel, cosmic and reverent,
+> volumetric haze, deep-space nocturne, moody chiaroscuro, muted palette (near-black, deep indigo, cold
+> star-silver) with a warm white-gold key light at the center, dreamlike, highly detailed, cinematic vertical
+> composition. Avoid: no text, no watermark, no people, no faces, no modern objects, not scary, not menacing,
+> no sci-fi spaceship, no harsh lens flare, no bright or cluttered foreground, not flat, not cartoon. Aspect 9:16.
+
 ---
 
 ## Handing it off
