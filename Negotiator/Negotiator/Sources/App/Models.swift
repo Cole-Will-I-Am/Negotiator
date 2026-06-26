@@ -76,6 +76,14 @@ struct LevelChoice: Identifiable, Equatable {
     let glyph: String
 }
 
+// Per-level intro cinemagraph art (bundled image + an "eyes-closed" frame for the blink + a title).
+// A level absent from this map simply skips the intro and goes straight to the conversation.
+struct IntroArt: Equatable { let open: String; let closed: String; let title: String }
+let INTRO_ART: [String: IntroArt] = [
+    "bartholomew": IntroArt(open: "intro_bridge",    closed: "intro_bridge_closed",    title: "The Mossback Bridge"),
+    "seraphine":   IntroArt(open: "intro_seraphine", closed: "intro_seraphine_closed", title: "The Star-Gate"),
+]
+
 let LEVEL_CHOICES: [LevelChoice] = [
     LevelChoice(id: "bartholomew", title: "The Mossback Bridge", gatekeeper: "Bartholomew",
                 tagline: "A lonely bridge troll guards a riddle-word. Befriend him, or out-lawyer his oath.",

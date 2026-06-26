@@ -5,6 +5,7 @@ import SwiftUI
 // title fading up. Robust across screen sizes — both frames are the same image displayed
 // identically, so the blink is a whole-frame crossfade with no per-eye coordinate anchoring.
 struct IntroCutscene: View {
+    let art: IntroArt
     @State private var closed = false
     @State private var zoom = false
     @State private var showTitle = false
@@ -14,12 +15,12 @@ struct IntroCutscene: View {
         ZStack {
             Color.black
             GeometryReader { geo in
-                Image("intro_bridge")
+                Image(art.open)
                     .resizable()
                     .scaledToFill()
                     .frame(width: geo.size.width, height: geo.size.height)
                     .overlay(
-                        Image("intro_bridge_closed")
+                        Image(art.closed)
                             .resizable()
                             .scaledToFill()
                             .frame(width: geo.size.width, height: geo.size.height)
@@ -30,7 +31,7 @@ struct IntroCutscene: View {
             }
             VStack {
                 Spacer()
-                Text("The Mossback Bridge")
+                Text(art.title)
                     .font(Type.serif(28, .bold))
                     .foregroundStyle(Palette.paper)
                     .shadow(color: .black.opacity(0.85), radius: 6, y: 2)

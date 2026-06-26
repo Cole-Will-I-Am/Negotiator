@@ -8,6 +8,7 @@ final class GameStore: ObservableObject {
 
     @Published var screen: Screen = .loading
     @Published var activeCutscene: Cutscene?
+    @Published private(set) var introArt: IntroArt?
     @Published var cinematicsEnabled: Bool {
         didSet { local.cinematicsEnabled = cinematicsEnabled }
     }
@@ -32,8 +33,6 @@ final class GameStore: ObservableObject {
     private var introWaiting = false
     private var introLoadOK: Bool?
     private var pendingLevelId = "bartholomew"
-    // Level ids that ship a cinemagraph intro; others go straight to the conversation.
-    private static let levelsWithIntro: Set<String> = ["bartholomew"]
 
     init() {
         token = Keychain.get("negotiator.sessionToken")
@@ -104,7 +103,8 @@ final class GameStore: ObservableObject {
     func approachBridge(_ levelId: String) {
         pendingLevelId = levelId
         errorText = nil
-        guard cinematicsEnabled, Self.levelsWithIntro.contains(levelId) else { startGame(); return }
+        guard cinematicsEnabled, let art = INTRO_ART[levelId] else { startGame(); return }
+        introArt = art
         introWaiting = false
         introLoadOK = nil
         activeCutscene = .intro
@@ -215,7 +215,7 @@ final class GameStore: ObservableObject {
     func playAgain() {
         messages = []; level = nil; sessionId = nil
         gkPhase = .cold; won = false; seam = nil; turnsTaken = 0
-        phaseHint = nil; activeCutscene = nil
+        phaseHint = nil; activeCutscene = nil; introArt = nil
         screen = .home
     }
 
